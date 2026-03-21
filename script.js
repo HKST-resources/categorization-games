@@ -53,19 +53,17 @@ const vocabList = bulkVocabData.split('\n').map((line, i) => {
 let selectedCards = [];
 let gameType = 'fixed'; 
 
-// --- 背景處理 ---
+// --- 1. 背景與設定 ---
 document.getElementById('bgPicker').addEventListener('change', (e) => {
     const main = document.getElementById('capture-area');
     const bgVideo = document.getElementById('bg-video');
     const val = e.target.value;
-
     main.style.backgroundImage = "none";
     bgVideo.style.display = "none";
     bgVideo.pause();
 
-    if (val === 'white') {
-        main.style.backgroundColor = "white";
-    } else if (val.endsWith('.mp4')) {
+    if (val === 'white') main.style.backgroundColor = "white";
+    else if (val.endsWith('.mp4')) {
         bgVideo.src = `video/${val}`;
         bgVideo.style.display = "block";
         bgVideo.play();
@@ -78,18 +76,27 @@ document.getElementById('sizeSlider').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--card-size', `${e.target.value}px`);
 });
 
-// --- 遊戲導航 ---
+// 修正：文字顯示切換
+function toggleTextDisplay() {
+    const isChecked = document.getElementById('textToggle').checked;
+    const stage = document.getElementById('game-stage');
+    if (isChecked) stage.classList.remove('hide-text');
+    else stage.classList.add('hide-text');
+}
+
+// --- 2. 遊戲流程 ---
 function initGame(mode) {
     if (mode === 'sorting') renderLevelSelect();
 }
 
+// 頁面 1: 格式選擇 (加大按鈕)
 function renderLevelSelect() {
     const stage = document.getElementById('game-stage');
     document.getElementById('current-game-title').innerText = "1. 選擇分類方式";
     stage.innerHTML = `
-        <div style="text-align:center; padding-top:80px;">
-            <button class="action-btn" style="background:var(--color-sorting); margin:15px;" onclick="startSelection('fixed')">按類別分類</button>
-            <button class="action-btn" style="background:#f39c12; margin:15px;" onclick="startSelection('free')">自由分類</button>
+        <div style="text-align:center; padding-top:100px;">
+            <button class="action-btn btn-fixed" style="margin:20px;" onclick="startSelection('fixed')">按類別分類</button>
+            <button class="action-btn btn-free" style="margin:20px;" onclick="startSelection('free')">自由分類</button>
         </div>`;
 }
 
@@ -98,23 +105,48 @@ function startSelection(type) {
     renderSelectionPage();
 }
 
+// 頁面 2: 選取卡片 (加入搜尋列)
 function renderSelectionPage() {
     const stage = document.getElementById('game-stage');
     document.getElementById('current-game-title').innerText = "2. 選取練習詞彙";
-    const categories = [...new Set(vocabList.map(v => v.category))];
-    let html = `<button class="back-btn" onclick="renderLevelSelect()">⇠ 返回</button><br>`;
     
-    categories.forEach(cat => {
-        html += `<div class="category-section"><span class="category-title">${cat}</span><div class="selection-grid">`;
-        vocabList.filter(v => v.category === cat).forEach(item => {
-            const isActive = selectedCards.some(c => c.id === item.id);
-            html += `<div class="select-item ${isActive ? 'active' : ''}" id="sel-${item.id}" onclick="toggleSelect(${item.id})">
-                        <img src="images/${item.img}"><p>${item.name}</p></div>`;
-        });
-        html += `</div></div>`;
-    });
-    html += `<div style="text-align:right;"><button class="action-btn" style="background:#10AC84" onclick="renderPrep()">繼續 ➔</button></div>`;
+    let html = `
+        <button class="back-btn" onclick="renderLevelSelect()">⇠ 返回</button>
+        <div class="search-bar-container">
+            <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙名稱..." onkeyup="filterVocabs()">
+        </div>
+        <div id="selection-content"></div>
+        <div style="text-align:right; margin-top:20px;">
+            <button class="action-btn" style="background:#10AC84" onclick="proceedFromSelection()">開始活動 ➔</button>
+        </div>`;
+    
     stage.innerHTML = html;
+    updateSelectionList(); // 渲染清單
+}
+
+function filterVocabs() {
+    const query = document.getElementById('vocabSearch').value.toLowerCase();
+    updateSelectionList(query);
+}
+
+function updateSelectionList(query = "") {
+    const container = document.getElementById('selection-content');
+    const categories = [...new Set(vocabList.map(v => v.category))];
+    let html = "";
+
+    categories.forEach(cat => {
+        const items = vocabList.filter(v => v.category === cat && v.name.toLowerCase().includes(query));
+        if (items.length > 0) {
+            html += `<div class="category-section"><span class="category-title">${cat}</span><div class="selection-grid">`;
+            items.forEach(item => {
+                const isActive = selectedCards.some(c => c.id === item.id);
+                html += `<div class="select-item ${isActive ? 'active' : ''}" id="sel-${item.id}" onclick="toggleSelect(${item.id})">
+                            <img src="images/${item.img}"><p>${item.name}</p></div>`;
+            });
+            html += `</div></div>`;
+        }
+    });
+    container.innerHTML = html;
 }
 
 function toggleSelect(id) {
@@ -124,8 +156,15 @@ function toggleSelect(id) {
     document.getElementById(`sel-${id}`).classList.toggle('active');
 }
 
+// 流程控制：自由分類跳過準備板
+function proceedFromSelection() {
+    if(selectedCards.length === 0) return alert("請先選取卡片");
+    if(gameType === 'free') runChallenge(); // 自由分類直接開始
+    else renderPrep(); // 按類別則進入準備板
+}
+
+// 頁面 3: 準備板 (僅限「按類別」)
 function renderPrep() {
-    if(selectedCards.length === 0) return alert("請選取卡片");
     const stage = document.getElementById('game-stage');
     document.getElementById('current-game-title').innerText = "3. 教學預覽";
     const cats = [...new Set(selectedCards.map(c => c.category))];
@@ -146,24 +185,31 @@ function renderPrep() {
         <div style="text-align:center; padding:20px;"><button class="action-btn" style="background:var(--color-sorting)" onclick="runChallenge()">開始活動！🚀</button></div>`;
 }
 
+// 頁面 4: 挑戰畫面
 function runChallenge() {
     const stage = document.getElementById('game-stage');
-    document.getElementById('current-game-title').innerText = "4. 分類挑戰！";
-    const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["組別 A", "組別 B"];
+    document.getElementById('current-game-title').innerText = "活動進行中";
+    
+    // 自由分類使用 2 個框，無標題，有邊框色
+    const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["Box1", "Box2"];
     const colors = ["#FF6B6B", "#48DBFB", "#1DD1A1", "#Feca57"];
 
     stage.innerHTML = `
-        <button class="back-btn" onclick="renderPrep()">⇠ 返回</button>
+        <button class="back-btn" onclick="${gameType === 'free' ? 'renderSelectionPage()' : 'renderPrep()'}">⇠ 返回</button>
         <div id="pool" class="challenge-pool"></div>
         <div class="bin-container">
             ${cats.map((cat, i) => `
-                <div class="bin">
+                <div class="bin" style="${gameType === 'free' ? 'border-color:' + colors[i % 4] : ''}">
+                    ${gameType === 'fixed' ? `
                     <div class="bin-header" style="background:${colors[i%4]}">
-                        <img src="images/categories/${cat}.png" onerror="this.style.display='none'">${gameType==='fixed'?cat:'自由分類'}</div>
+                        <img src="images/categories/${cat}.png" onerror="this.style.display='none'">${cat}
+                    </div>` : ''}
                     <div class="drop-zone" data-cat="${cat}"></div>
                 </div>`).join('')}
         </div>
         ${gameType==='free'?'<button class="action-btn" style="background:#10AC84; margin:20px auto; display:block;" onclick="finish()">完成 ✅</button>':''}`;
+
+    toggleTextDisplay(); // 確保文字顯示狀態符合設定
 
     const pool = document.getElementById('pool');
     [...selectedCards].sort(()=>0.5-Math.random()).forEach(c => {
@@ -176,6 +222,7 @@ function runChallenge() {
     });
 }
 
+// --- 3. 邏輯與截圖 ---
 function check(e) {
     const isCorrect = e.item.dataset.cat === e.to.dataset.cat;
     showFX(e.item, isCorrect);
@@ -199,10 +246,25 @@ function finish() {
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 }
 
-function takeScreenshot() {
-    const area = document.getElementById('capture-area');
-    html2canvas(area, { useCORS: true, scale: 2, height: area.scrollHeight, windowHeight: area.scrollHeight, scrollY: 0 }).then(canvas => {
-        const link = document.createElement('a'); link.download = `練習_${new Date().toLocaleDateString()}.png`;
-        link.href = canvas.toDataURL(); link.click();
+// 修正：完整高度截圖
+async function takeScreenshot() {
+    const stage = document.getElementById('game-stage');
+    const originalStyle = stage.style.overflowY;
+    
+    // 暫時展開高度以便截圖
+    stage.style.overflowY = 'visible';
+    const canvas = await html2canvas(document.getElementById('capture-area'), {
+        useCORS: true,
+        scale: 2,
+        scrollY: -window.scrollY,
+        height: document.getElementById('capture-area').scrollHeight,
+        windowHeight: document.getElementById('capture-area').scrollHeight
     });
+    
+    stage.style.overflowY = originalStyle; // 還原捲動
+
+    const link = document.createElement('a');
+    link.download = `練習記錄_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
 }

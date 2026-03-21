@@ -6,7 +6,6 @@
 body { 
     margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; 
     overflow: hidden; 
-    /* 3. 預設草地背景 */
     background: url('images/park.jpg') no-repeat center center fixed; 
     background-size: cover; 
 }
@@ -25,54 +24,76 @@ body {
 .btn-ran { background: #EE5253; }
 
 .nav-settings { display: flex; align-items: center; gap: 15px; margin-left: auto; }
-.control-item { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+.control-item { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; font-weight: bold; }
 
-/* 4. 格式選擇大按鈕修正 */
+/* 格式選擇大按鈕 */
 .btn-fixed, .btn-free { 
-    padding: 40px 60px !important; 
-    font-size: 2rem !important; 
-    border-radius: 30px !important; 
-    color: white; 
-    border: none; 
-    cursor: pointer; 
-    margin: 20px;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    padding: 40px 60px !important; font-size: 2rem !important; border-radius: 30px !important; 
+    color: white; border: none; cursor: pointer; margin: 20px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1); transition: transform 0.2s;
 }
 .btn-fixed { background-color: #FF9F43; }
 .btn-free { background-color: #3498db; }
-.btn-fixed:active, .btn-free:active { transform: scale(0.95); }
 
 /* 主區域 */
 #capture-area { flex-grow: 1; height: calc(100vh - var(--top-bar-height)); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 #game-stage { flex-grow: 1; overflow-y: auto; padding: 20px; }
 
-/* 選取頁面小圖 - 確保 z-index 不會擋住點擊 */
-.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+/* 搜尋框放大 */
+#vocabSearch { 
+    width: 100%; padding: 15px 20px; font-size: 1.3rem; border-radius: 15px; 
+    border: 3px solid #FF9F43; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px;
+    box-sizing: border-box;
+}
+
+/* 選取頁面分區 */
+.category-section { margin-bottom: 35px; padding-bottom: 20px; border-bottom: 2px dashed #ccc; }
+.category-title { 
+    display: block; font-size: 1.4rem; font-weight: bold; color: #2d3436; 
+    margin-bottom: 15px; background: rgba(255,255,255,0.7); padding: 8px 15px;
+    border-left: 10px solid #FF9F43; border-radius: 5px;
+}
+
+.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 15px; }
 .select-item { 
-    border: 4px solid #fff; border-radius: 15px; padding: 10px; text-align: center; 
-    cursor: pointer; background: rgba(255,255,255,0.9); position: relative; z-index: 5;
+    border: 4px solid #fff; border-radius: 15px; padding: 12px; text-align: center; 
+    cursor: pointer; background: rgba(255,255,255,0.9); transition: 0.2s;
 }
 .select-item.active { border-color: #10AC84; background: #e6fff9; }
-.select-item img { width: 90px; height: 90px; object-fit: contain; pointer-events: none; }
+.select-item img { width: 95px; height: 95px; object-fit: contain; pointer-events: none; }
 
-/* 分類箱佈局 (左側標題) */
+/* 遊戲挑戰頁面：網格化池子 */
+.challenge-pool { 
+    background: rgba(255,255,255,0.4); border: 3px dashed #666; border-radius: 20px; 
+    padding: 20px; min-height: 160px; margin-bottom: 25px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+    gap: 15px; justify-items: center; align-content: start;
+}
+
+/* 初始挑戰卡片縮小 */
+.challenge-pool .card { width: 110px !important; padding: 8px; margin: 0; font-size: 0.9rem; }
+
+/* 進入分類箱後恢復設定大小 */
+.drop-zone .card { width: var(--card-size) !important; padding: 10px; margin: 8px; font-size: 1.1rem; }
+
+/* 分類箱佈局 */
 .bin { 
     display: flex; flex-direction: row; min-width: 600px; min-height: 200px; 
     border: 5px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.85); 
     margin: 20px auto; overflow: hidden; 
 }
-.bin-header { 
-    width: 120px; flex-shrink: 0; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center; padding: 10px; 
-}
-.bin-header img { width: 80px; height: 80px; object-fit: contain; }
-.bin-header span { font-size: 0.9rem; font-weight: bold; color: white; margin-top: 5px; }
+.bin-header { width: 120px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+.bin-header img { width: 85px; height: 85px; object-fit: contain; }
+.bin-header span { font-size: 0.9rem; font-weight: bold; color: white; margin-top: 5px; text-align: center; }
 
-.drop-zone { flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 150px; }
-.card { width: var(--card-size); padding: 10px; border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; margin: 8px; position: relative; }
+.drop-zone { flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 160px; }
+
+.card { border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; position: relative; transition: width 0.2s; }
 .card img { width: 100%; border-radius: 10px; pointer-events: none; }
-.hide-text .card p { display: none; }
+.hide-text .card p, .hide-text .select-item p { display: none !important; }
+
+.feedback-star, .feedback-wrong { position: absolute; top: -15px; right: -10px; font-size: 50px; z-index: 100; pointer-events: none; animation: popUp 0.8s forwards; }
+@keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 
 .action-btn { cursor: pointer; border: none; color: white; font-weight: bold; }
 .back-btn { background: #b2bec3; padding: 10px 20px; border-radius: 10px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }

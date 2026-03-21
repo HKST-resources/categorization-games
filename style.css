@@ -1,14 +1,12 @@
 :root {
-    --card-size: 220px;
+    --card-size: 200px; /* 由 Slider 控制 */
     --sidebar-width: 220px;
     --font-sidebar: 1.1rem;
-    --color-sorting: #FF9F43;
-    --color-naming: #10AC84;
-    --color-ran: #EE5253;
 }
 
 body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; background: white; }
 
+/* 背景影片層級 */
 #bg-container { position: fixed; top: 0; left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); height: 100%; z-index: -1; pointer-events: none; }
 #bg-video { width: 100%; height: 100%; object-fit: cover; }
 
@@ -16,47 +14,51 @@ body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; overflo
 .sidebar h1 { font-size: 1.3rem; text-align: center; margin-bottom: 20px; }
 
 .menu-section button { width: 100%; padding: 15px; margin-bottom: 12px; border: none; border-radius: 15px; color: white; font-weight: bold; font-size: var(--font-sidebar); cursor: pointer; }
-.btn-sorting { background: var(--color-sorting); }
-.btn-naming { background: var(--color-naming); }
-.btn-ran { background: var(--color-ran); }
+.btn-sorting { background: #FF9F43; }
+.btn-naming { background: #10AC84; }
+.btn-ran { background: #EE5253; }
 
-/* 格式選擇大按鈕 */
-.btn-fixed { background: #FF9F43; padding: 30px 50px; font-size: 1.8rem; }
-.btn-free { background: #3498db; padding: 30px 50px; font-size: 1.8rem; }
+.btn-fixed { background: #FF9F43; padding: 30px 50px; font-size: 1.8rem; border-radius: 25px; }
+.btn-free { background: #3498db; padding: 30px 50px; font-size: 1.8rem; border-radius: 25px; }
 
 .setting-item { margin-bottom: 15px; font-size: 1rem; font-weight: 600; }
 .export-btn { width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 12px; background: #2d3436; color: white; border: none; cursor: pointer; }
 
 #capture-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background-size: cover; background-attachment: fixed; }
-/* 修正：由這個容器負責捲動，截圖時會針對它處理 */
 #game-stage { flex-grow: 1; overflow-y: auto; padding: 20px; position: relative; }
 
-/* 搜尋列樣式 */
-.search-bar-container { display: flex; gap: 10px; margin-bottom: 15px; }
-#vocabSearch { flex-grow: 1; padding: 10px; border-radius: 10px; border: 2px solid #ddd; font-size: 1.1rem; }
-
-/* 隱藏文字邏輯 */
+/* 搜尋與選取頁面 */
+.search-bar-container { margin-bottom: 15px; }
+#vocabSearch { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ddd; font-size: 1.1rem; box-sizing: border-box; }
 .hide-text p { display: none !important; }
 
-.category-section { margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px dashed #ccc; }
-.category-title { font-size: 1.3rem; font-weight: bold; color: #444; margin-bottom: 10px; display: block; }
-.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
-.select-item { border: 3px solid #eee; border-radius: 12px; padding: 8px; text-align: center; cursor: pointer; background: white; }
-.select-item img { width: 75px; height: 75px; object-fit: contain; }
-.select-item.active { border-color: #10AC84; background: #e6fff9; }
-
-.card { width: var(--card-size); padding: 10px; border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; margin: 8px; transition: width 0.2s; }
+/* 核心卡片樣式：移除固定寬度，強制跟隨變數 */
+.card { 
+    width: var(--card-size) !important; 
+    position: relative; 
+    padding: 10px; 
+    border: 4px solid #f0f0f0; 
+    border-radius: 20px; 
+    background: white; 
+    text-align: center; 
+    margin: 8px; 
+    box-sizing: border-box;
+}
 .card img { width: 100%; border-radius: 10px; pointer-events: none; }
-.card p { margin: 10px 0 0; font-weight: bold; font-size: 1.2rem; }
+.card p { margin: 10px 0 0; font-weight: bold; font-size: 1.1rem; }
 
-.challenge-pool { background: rgba(255,255,255,0.3); border: 2px dashed #888; border-radius: 20px; padding: 15px; min-height: 100px; display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
-.challenge-pool .card { width: 110px; }
+/* 分類盒子：橫向長矩形 */
+.bin { min-width: 480px; min-height: 180px; border: 6px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.85); display: flex; flex-direction: column; margin: 10px; }
+.bin-header { padding: 10px; font-size: 1.2rem; font-weight: bold; text-align: center; color: white; border-radius: 18px 18px 0 0; }
+.bin-header img { height: 35px; display: block; margin: 0 auto 5px; }
+.drop-zone { flex-grow: 1; min-height: 120px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
 
-.bin-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; }
-.bin { min-width: 280px; border: 6px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.8); display: flex; flex-direction: column; }
-.bin-header { padding: 12px; font-size: 1.3rem; font-weight: bold; text-align: center; color: white; border-radius: 18px 18px 0 0; }
-.bin-header img { height: 40px; display: block; margin: 0 auto 5px; }
-.drop-zone { min-height: 250px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.challenge-pool { background: rgba(255,255,255,0.3); border: 2px dashed #888; border-radius: 20px; padding: 15px; min-height: 120px; display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+/* 挑戰時卡片依然跟隨 Slider，但我們可以微調比例 */
+.challenge-pool .card { width: calc(var(--card-size) * 0.7) !important; } 
 
-.action-btn { padding: 15px 40px; font-size: 1.3rem; border-radius: 20px; border: none; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.feedback-star, .feedback-wrong { position: absolute; top: -15px; right: -10px; font-size: 50px; z-index: 100; animation: popUp 0.8s forwards; pointer-events: none; }
+@keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+
+.action-btn { cursor: pointer; border: none; color: white; font-weight: bold; transition: 0.2s; }
 .back-btn { background: #b2bec3; padding: 8px 18px; border-radius: 10px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }

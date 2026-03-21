@@ -1,19 +1,27 @@
 :root {
     --card-size: 220px;
-    --sidebar-width: 220px; /* 縮窄側邊欄 */
-    --font-sidebar: 1.2rem; /* 調整後的字體 */
+    --sidebar-width: 220px;
+    --font-sidebar: 1.2rem;
     --color-sorting: #FF9F43;
     --color-naming: #10AC84;
     --color-ran: #EE5253;
 }
 
-body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; background: #f4f7f6; }
+body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; background: white; }
+
+/* 背景影片容器 */
+#bg-container {
+    position: fixed; top: 0; left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width)); height: 100%;
+    z-index: -1; pointer-events: none;
+}
+#bg-video { width: 100%; height: 100%; object-fit: cover; }
 
 .sidebar {
     width: var(--sidebar-width); flex-shrink: 0; background: white; padding: 20px;
-    border-right: 4px solid #eee; display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    border-right: 4px solid #eee; display: flex; flex-direction: column; z-index: 10;
 }
-.sidebar h1 { font-size: 1.4rem; text-align: center; }
+.sidebar h1 { font-size: 1.4rem; text-align: center; margin-bottom: 20px; }
 
 .menu-section button {
     width: 100%; padding: 15px; margin-bottom: 12px; border: none; border-radius: 15px;
@@ -24,50 +32,36 @@ body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; backgro
 .btn-ran { background: var(--color-ran); }
 
 .setting-item { margin-bottom: 15px; font-size: 1.1rem; font-weight: 600; }
-.setting-item select { width: 100%; padding: 8px; font-size: 1rem; border-radius: 8px; }
-.export-btn { 
-    width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 12px; 
-    background: #2d3436; color: white; border: none; cursor: pointer; 
-}
+.setting-item select { width: 100%; padding: 8px; font-size: 1rem; border-radius: 8px; margin-top: 5px; }
+.export-btn { width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 12px; background: #2d3436; color: white; border: none; cursor: pointer; }
 
-#capture-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+#capture-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background-size: cover; background-attachment: fixed; background-position: center; }
 #game-stage { flex-grow: 1; overflow-y: auto; padding: 20px; }
 
-/* 選取畫面：分類分區 */
-.category-section { margin-bottom: 30px; border-bottom: 2px dashed #ddd; padding-bottom: 15px; }
-.category-title { font-size: 1.4rem; color: #555; margin-bottom: 10px; display: block; }
-.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+/* 分類與卡片樣式 */
+.category-section { margin-bottom: 30px; padding-bottom: 10px; border-bottom: 2px dashed #ccc; }
+.category-title { font-size: 1.4rem; font-weight: bold; color: #444; margin-bottom: 10px; display: block; }
+.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
 .select-item { border: 3px solid #eee; border-radius: 12px; padding: 8px; text-align: center; cursor: pointer; background: white; }
-.select-item img { width: 70px; height: 70px; object-fit: contain; }
+.select-item img { width: 75px; height: 75px; object-fit: contain; }
 .select-item.active { border-color: #10AC84; background: #e6fff9; }
 
-/* 卡片 */
-.card {
-    width: var(--card-size); padding: 10px; border: 4px solid #f0f0f0; border-radius: 20px;
-    background: white; text-align: center; margin: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
+.card { width: var(--card-size); padding: 10px; border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; margin: 8px; }
 .card img { width: 100%; border-radius: 10px; }
-.card p { font-size: 1.2rem; font-weight: bold; margin: 8px 0 0; }
 .hide-text .card p { display: none; }
 
-/* 挑戰畫面佈局 */
-.challenge-pool { 
-    background: rgba(255,255,255,0.4); border: 2px dashed #999; 
-    border-radius: 20px; padding: 15px; min-height: 120px; display: flex; flex-wrap: wrap; 
-    justify-content: center; margin-bottom: 30px;
-}
-.challenge-pool .card { width: 120px; } /* 挑戰時卡片縮小 */
+.challenge-pool { background: rgba(255,255,255,0.3); border: 2px dashed #888; border-radius: 20px; padding: 15px; min-height: 100px; display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+.challenge-pool .card { width: 110px; } /* 挑戰時縮小卡片 */
 
-.bin-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; }
-.bin { min-width: 280px; border: 4px solid #ddd; border-radius: 25px; display: flex; flex-direction: column; background: white; }
+.bin-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; align-items: flex-start; }
+.bin { min-width: 280px; border: 4px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.8); display: flex; flex-direction: column; }
 .bin-header { padding: 12px; font-size: 1.3rem; font-weight: bold; text-align: center; color: white; border-radius: 20px 20px 0 0; }
-.bin-header img { height: 45px; display: block; margin: 0 auto 5px; }
+.bin-header img { height: 40px; display: block; margin: 0 auto 5px; }
+.drop-zone { min-height: 250px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* 按鈕 */
 .action-btn { padding: 15px 40px; font-size: 1.3rem; border-radius: 20px; border: none; color: white; cursor: pointer; font-weight: bold; }
-.back-btn { background: #b2bec3; padding: 8px 18px; border-radius: 10px; color: white; border: none; cursor: pointer; margin-right: 10px; }
+.back-btn { background: #b2bec3; padding: 8px 18px; border-radius: 10px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
 
-/* 特效 */
-.feedback-star { position: absolute; font-size: 50px; color: gold; animation: pop 0.5s ease-out; pointer-events: none; }
-.feedback-wrong { position: absolute; font-size: 50px; color: red; animation: pop 0.5s ease-out; pointer-events: none; }
-@keyframes pop { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+/* 反饋動畫 */
+.feedback-star, .feedback-wrong { position: fixed; font-size: 60px; z-index: 1000; animation: popUp 0.8s forwards; pointer-events: none; }
+@keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }

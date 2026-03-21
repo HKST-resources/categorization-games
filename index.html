@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
@@ -15,7 +16,7 @@
     </div>
 
     <nav class="sidebar">
-        <h1>詞彙學習活動</h1>
+        <h1>🗣️詞彙學習活動</h1>
         
         <div class="menu-section">
             <button class="btn-sorting" onclick="initGame('sorting')">1. 分類遊戲</button>
@@ -25,43 +26,36 @@
 
         <div class="settings-section">
             <hr>
-            <h3>🛠️ 控制面板</h3>
-            
+            <h3>⚙️ 控制面板</h3>
             <div class="setting-item">
                 <label>卡片大小</label>
                 <input type="range" id="sizeSlider" min="150" max="450" value="220">
             </div>
-
             <div class="setting-item">
-                <label><input type="checkbox" id="textToggle" checked> 顯示文字標籤</label>
+                <label><input type="checkbox" id="textToggle" checked> 顯示標籤</label>
             </div>
-
             <div class="setting-item">
                 <label>背景選擇</label>
                 <select id="bgPicker">
-                    <option value="white">純白背景</option>
+                    <option value="white">純白</option>
                     <option value="park.jpg">圖片 1</option>
-                    <option value="classroom.jpg">圖片 2 </option>
-                    <option value="beach.jpg">圖片 3 </option>
+                    <option value="classroom.jpg">圖片 2</option>
+                    <option value="beach.jpg">圖片 3</option>
                     <option value="video">動態影片</option>
                 </select>
             </div>
-            
             <button class="export-btn" onclick="takeScreenshot()">📸 匯出練習結果</button>
         </div>
     </nav>
 
     <main id="capture-area">
-        <div id="game-header">
-            <h2 id="current-game-title">請從左側選擇遊戲</h2>
-        </div>
-        
-        <div id="game-stage">
-            <div class="welcome-screen">
-                <p>請點選左邊的按鈕開始活動！</p>
-            </div>
-        </div>
+        <div id="game-header"><h2 id="current-game-title">請選擇活動</h2></div>
+        <div id="game-stage"></div>
     </main>
+
+    <audio id="snd-star" src="sounds/star.mp3"></audio>
+    <audio id="snd-wrong" src="sounds/wrong.mp3"></audio>
+    <audio id="snd-hooray" src="sounds/hooray.mp3"></audio>
 
     <script src="script.js"></script>
 </body>

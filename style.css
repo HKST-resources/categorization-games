@@ -1,5 +1,5 @@
 :root {
-    --card-size: 180px;
+    --card-size: 200px;
     --top-bar-height: 60px;
 }
 
@@ -14,83 +14,51 @@ body {
 .top-bar { 
     height: var(--top-bar-height); background: rgba(255,255,255,0.95); 
     border-bottom: 2px solid #ddd; display: flex; align-items: center; 
-    padding: 0 20px; z-index: 100; gap: 20px;
+    padding: 0 20px; z-index: 100; gap: 20px; flex-shrink: 0;
 }
-.nav-group { display: flex; gap: 10px; }
-.nav-btn { padding: 8px 15px; border-radius: 10px; border: none; color: white; font-weight: bold; cursor: pointer; }
-.btn-sorting { background: #FF9F43; }
-.btn-naming { background: #10AC84; }
-.btn-ran { background: #EE5253; }
 .nav-settings { display: flex; align-items: center; gap: 15px; margin-left: auto; }
 .control-item { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; font-weight: bold; }
 
-/* --- Selection Page UI --- */
-#vocabSearch { 
-    width: 100%; padding: 18px 25px; font-size: 1.4rem; border-radius: 15px; 
-    border: 3px solid #FF9F43; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px;
-    box-sizing: border-box;
-}
-.category-section { margin-bottom: 35px; padding-bottom: 20px; border-bottom: 3px dashed #bbb; }
-.category-title { 
-    display: block; font-size: 1.5rem; font-weight: bold; color: #2d3436; 
-    margin-bottom: 15px; background: rgba(255,255,255,0.8); padding: 10px 20px;
-    border-left: 12px solid #FF9F43; border-radius: 5px;
-}
-.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-.select-item { 
-    border: 4px solid #fff; border-radius: 15px; padding: 12px; text-align: center; 
-    cursor: pointer; background: rgba(255,255,255,0.9);
-}
-.select-item.active { border-color: #10AC84; background: #e6fff9; transform: scale(1.02); }
-.select-item img { width: 100px; height: 100px; object-fit: contain; pointer-events: none; }
-
-/* --- Challenge Layout (Split Screen) --- */
+/* --- Global Page Containers --- */
 #capture-area { flex-grow: 1; height: calc(100vh - var(--top-bar-height)); overflow: hidden; position: relative; }
-#game-stage { 
-    display: flex; flex-direction: row; gap: 20px; padding: 20px; box-sizing: border-box;
-    height: 100%; width: 100%;
-}
+#game-stage { height: 100%; width: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; }
 
-/* Left: Card Pool */
+/* --- SELECTION & PREP LAYOUT (Vertical/Perfect Version) --- */
+.vertical-layout { display: block !important; }
+#vocabSearch { width: 100%; padding: 15px 20px; font-size: 1.3rem; border-radius: 15px; border: 3px solid #FF9F43; margin-bottom: 25px; box-sizing: border-box; }
+.category-section { margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px dashed #ccc; }
+.category-title { display: block; font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; background: rgba(255,255,255,0.7); padding: 5px 15px; border-left: 8px solid #FF9F43; border-radius: 5px; }
+.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+.select-item { border: 4px solid #fff; border-radius: 15px; padding: 10px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.9); }
+.select-item.active { border-color: #10AC84; background: #e6fff9; }
+.select-item img { width: 90px; height: 90px; object-fit: contain; pointer-events: none; }
+
+/* --- CHALLENGE LAYOUT (Split Screen) --- */
+.challenge-layout { display: flex !important; flex-direction: row !important; gap: 20px; overflow: hidden !important; }
 .challenge-pool { 
-    width: 320px; height: 100%; background: rgba(255,255,255,0.3); 
-    border: 4px dashed #555; border-radius: 20px; padding: 15px; 
-    display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: min-content;
-    gap: 12px; overflow-y: auto; box-sizing: border-box;
+    width: 320px; height: 100%; background: rgba(255,255,255,0.3); border: 4px dashed #666; border-radius: 20px; 
+    padding: 15px; display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: min-content; gap: 12px; overflow-y: auto; 
 }
+.bin-container { flex-grow: 1; height: 100%; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
 
-/* Right: Bins */
-.bin-container { 
-    flex-grow: 1; height: 100%; display: flex; flex-direction: column; 
-    gap: 15px; overflow-y: auto; padding-right: 10px;
-}
+/* --- Components --- */
+.bin { display: flex; width: 100%; min-height: 160px; border: 5px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.85); overflow: hidden; flex-shrink: 0; }
+.bin-header { width: 110px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+.bin-header img { width: 70px; height: 70px; object-fit: contain; }
+.bin-header span { font-size: 0.85rem; font-weight: bold; color: white; margin-top: 5px; text-align: center; }
+.drop-zone { flex-grow: 1; padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 100px; }
 
-/* Bin Styling */
-.bin { 
-    display: flex; flex-direction: row; width: 100%; min-height: 160px; 
-    border: 5px solid #ddd; border-radius: 25px; background: rgba(255,255,255,0.9); 
-    overflow: hidden; flex-shrink: 0;
-}
-.bin-header { width: 120px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
-.bin-header img { width: 80px; height: 80px; object-fit: contain; }
-.bin-header span { font-size: 0.9rem; font-weight: bold; color: white; margin-top: 5px; text-align: center; }
-
-.drop-zone { flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 120px; overflow-y: auto; }
-
-/* Cards */
-.card { border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; position: relative; transition: width 0.2s, transform 0.2s; }
+.card { border: 4px solid #f0f0f0; border-radius: 20px; background: white; text-align: center; position: relative; }
 .card img { width: 100%; border-radius: 10px; pointer-events: none; }
-.challenge-pool .card { width: 120px !important; font-size: 0.85rem; }
-.drop-zone .card { width: var(--card-size) !important; font-size: 1.1rem; }
+.challenge-pool .card { width: 120px !important; }
+.drop-zone .card { width: var(--card-size) !important; }
 
-/* Text Toggle */
 .hide-text .card p, .hide-text .select-item p { display: none !important; }
 
-/* Feedback */
-.feedback-star, .feedback-wrong { position: absolute; top: -20px; right: -15px; font-size: 60px; z-index: 1000; animation: popUp 0.8s forwards; }
-@keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
-
-/* Buttons */
+/* Big Buttons */
 .btn-fixed, .btn-free { padding: 40px 60px; font-size: 2rem; border-radius: 30px; color: white; border: none; cursor: pointer; margin: 20px; }
 .btn-fixed { background: #FF9F43; } .btn-free { background: #3498db; }
-.back-btn { background: #b2bec3; padding: 10px 20px; border-radius: 10px; color: white; border: none; cursor: pointer; }
+.back-btn { background: #b2bec3; padding: 10px 20px; border-radius: 10px; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
+
+.feedback-star, .feedback-wrong { position: absolute; top: -20px; right: -15px; font-size: 60px; z-index: 1000; animation: popUp 0.8s forwards; pointer-events: none; }
+@keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }

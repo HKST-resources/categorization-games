@@ -1,144 +1,73 @@
 :root {
     --card-size: 220px;
-    --sidebar-width: 260px;
-    /* 遊戲顏色 */
+    --sidebar-width: 280px;
     --color-sorting: #FF9F43;
     --color-naming: #10AC84;
     --color-ran: #EE5253;
 }
 
 body {
-    margin: 0;
-    font-family: 'Hiragino Sans GB', 'Microsoft JhengHei', sans-serif;
-    display: flex;
-    height: 100vh;
-    background-color: #f7f9fc;
-    color: #2d3436;
+    margin: 0; font-family: 'Hiragino Sans GB', 'Microsoft JhengHei', sans-serif;
+    display: flex; height: 100vh; background-color: #f0f7f4; color: #2d3436;
 }
 
-/* 側邊欄：固定寬度 */
+/* 側邊欄固定 */
 .sidebar {
-    width: var(--sidebar-width);
-    flex-shrink: 0;
-    background: #ffffff;
-    padding: 25px;
-    border-right: 4px solid #dfe6e9;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-    z-index: 10;
+    width: var(--sidebar-width); flex-shrink: 0;
+    background: #ffffff; padding: 25px; border-right: 5px solid #e0e0e0;
+    display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.05); z-index: 10;
 }
+.sidebar h1 { font-size: 1.7rem; text-align: center; margin-bottom: 25px; }
 
-.sidebar h1 { font-size: 1.6rem; text-align: center; margin-bottom: 30px; color: #2d3436; }
-
-/* 按鈕風格：加大字體與鮮豔色彩 */
+/* 按鈕大字體與顏色 */
 .menu-section button {
-    width: 100%;
-    padding: 18px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 20px;
-    color: white;
-    font-weight: 800;
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 100%; padding: 20px; margin-bottom: 15px; border: none; border-radius: 20px;
+    color: white; font-weight: 900; font-size: 1.5rem; cursor: pointer; transition: 0.2s;
 }
-.menu-section button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
-
 .btn-sorting { background-color: var(--color-sorting); }
 .btn-naming { background-color: var(--color-naming); }
 .btn-ran { background-color: var(--color-ran); }
 
-/* 控制面板佈局 */
-.settings-section h3 { font-size: 1.3rem; margin-top: 20px; }
-.setting-item {
-    margin-bottom: 25px;
-    display: block;
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-.setting-item input[type="range"] { width: 100%; margin-top: 10px; }
-.setting-item select { width: 100%; padding: 10px; font-size: 1.1rem; border-radius: 10px; margin-top: 8px; }
-.export-btn { 
-    background: #2d3436; color: white; padding: 15px; border-radius: 15px; 
-    width: 100%; font-size: 1.1rem; cursor: pointer; border: none; 
+/* 控制面板每行顯示 */
+.setting-item { margin-bottom: 25px; display: block; font-size: 1.3rem; font-weight: bold; }
+.setting-item input[type="range"] { width: 100%; height: 15px; }
+.setting-item select, #vocabSearch, #categoryFilter { 
+    width: 100%; padding: 12px; font-size: 1.3rem; border-radius: 12px; border: 2px solid #ddd; margin-top: 8px;
 }
 
-/* 主舞台 */
-#capture-area {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden; /* 由內層控制滾動 */
-}
-
-#game-header { padding: 20px; text-align: center; background: rgba(255,255,255,0.8); border-bottom: 1px solid #eee; }
-#game-header h2 { font-size: 1.8rem; margin: 0; }
-
+/* 遊戲舞台 */
+#capture-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+#game-header { padding: 15px; text-align: center; background: rgba(255,255,255,0.9); }
 #game-stage { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
 
-/* 選取畫面：固定小卡片 */
-.selection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 15px;
-    padding: 10px;
+/* 選取畫面小卡片 (不受 Slider 影響) */
+.selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 15px; }
+.select-item { 
+    background: white; border: 4px solid #eee; border-radius: 15px; padding: 10px; text-align: center; cursor: pointer; 
 }
-.select-item {
-    background: white; border: 3px solid #eee; border-radius: 15px; padding: 10px;
-    text-align: center; cursor: pointer; transition: all 0.2s;
-}
-.select-item img { width: 80px; height: 80px; object-fit: contain; }
-.select-item p { margin: 5px 0 0; font-size: 1rem; font-weight: bold; }
+.select-item img { width: 85px; height: 85px; object-fit: contain; }
 .select-item.active { border-color: #10AC84; background: #e6fff9; transform: scale(1.05); }
 
-/* 搜尋與過濾器 */
-#vocabSearch, #categoryFilter { font-size: 1.3rem; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-right: 10px; }
-
-/* 遊戲/教學中的卡片：受 Slider 控制 */
+/* 教學/遊戲大卡片 (受 Slider 控制) */
 .card {
-    width: var(--card-size);
-    padding: 15px; border: 4px solid #f0f0f0; border-radius: 25px;
-    background: white; text-align: center; margin: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    width: var(--card-size); padding: 15px; border: 5px solid #f0f0f0; border-radius: 25px;
+    background: white; text-align: center; margin: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);
 }
-.card img { width: 100%; border-radius: 15px; pointer-events: none; }
-.card p { font-size: 1.5rem; font-weight: 800; margin: 10px 0 0; color: #2d3436; }
+.card img { width: 100%; border-radius: 15px; }
+.card p { font-size: 1.6rem; font-weight: 800; margin: 10px 0 0; }
 .hide-text .card p { display: none; }
 
-/* 分類盒子容器：支援橫向滾動防止溢出 */
-.bin-container {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    overflow-x: auto;
-    min-height: 500px;
-    align-items: flex-start;
-}
-.bin {
-    min-width: 300px;
-    background: rgba(255,255,255,0.7);
-    border: 4px dashed #ccc;
-    border-radius: 30px;
-    display: flex;
-    flex-direction: column;
-}
-.bin-header {
-    padding: 20px; font-size: 1.6rem; font-weight: bold; text-align: center;
-    color: white; border-radius: 25px 25px 0 0;
-}
-.bin-header img { height: 60px; display: block; margin: 0 auto 10px; }
-.drop-zone { flex-grow: 1; min-height: 350px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+/* 計時器動畫 */
+.timer-container { width: 90%; height: 50px; background: #eee; border-radius: 25px; margin: 20px auto; position: relative; overflow: hidden; }
+#timer-bar { height: 100%; background: linear-gradient(90deg, #1dd1a1, #ff6b6b); width: 100%; transition: width 1s linear; }
+.timer-icon { position: absolute; right: 10px; top: 5px; font-size: 30px; z-index: 2; }
 
-/* 動作按鈕 */
-.action-btn {
-    padding: 15px 40px; font-size: 1.4rem; border-radius: 20px; border: none;
-    background: var(--color-sorting); color: white; cursor: pointer; font-weight: bold;
-}
-.back-btn {
-    background: #bdc3c7; padding: 10px 20px; border-radius: 12px; border: none;
-    color: white; font-size: 1.1rem; cursor: pointer; margin-bottom: 10px;
-}
+/* 分類盒子 */
+.bin-container { display: flex; gap: 20px; padding: 20px; overflow-x: auto; min-height: 450px; }
+.bin { min-width: 320px; border: 5px dashed #ccc; border-radius: 35px; background: rgba(255,255,255,0.6); display: flex; flex-direction: column; }
+.bin-header { padding: 20px; font-size: 1.7rem; font-weight: bold; text-align: center; color: white; border-radius: 30px 30px 0 0; }
+.drop-zone { flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 300px; }
+
+/* 通用按鈕 */
+.action-btn { padding: 20px 50px; font-size: 1.6rem; border-radius: 25px; border: none; background: #2d3436; color: white; cursor: pointer; font-weight: bold; }
+.back-btn { background: #95a5a6; padding: 12px 25px; border-radius: 15px; color: white; font-size: 1.2rem; border: none; cursor: pointer; margin-bottom: 15px; }

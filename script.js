@@ -53,35 +53,30 @@ const vocabList = bulkVocabData.split('\n').map((line, i) => {
 let selectedCards = [];
 let gameType = 'fixed';
 
-// 背景切換
+// Settings Listeners
 document.getElementById('bgPicker').addEventListener('change', (e) => {
-    const val = e.target.value;
-    const body = document.body;
-    if (val === 'white') body.style.background = "white";
-    else body.style.background = `url('images/${val}') no-repeat center center fixed`;
-    body.style.backgroundSize = "cover";
+    document.body.style.background = e.target.value === 'white' ? "white" : `url('images/${e.target.value}') no-repeat center center fixed`;
+    document.body.style.backgroundSize = "cover";
 });
 
-// 卡片大小滑桿
 document.getElementById('sizeSlider').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--card-size', `${e.target.value}px`);
 });
 
-// 顯示/隱藏文字同步
 function toggleTextDisplay() {
     const stage = document.getElementById('game-stage');
-    const isChecked = document.getElementById('textToggle').checked;
-    isChecked ? stage.classList.remove('hide-text') : stage.classList.add('hide-text');
+    const checked = document.getElementById('textToggle').checked;
+    checked ? stage.classList.remove('hide-text') : stage.classList.add('hide-text');
 }
 
-// 遊戲導覽
+// Navigation
 function initGame(mode) { if (mode === 'sorting') renderLevelSelect(); }
 
 function renderLevelSelect() {
     const stage = document.getElementById('game-stage');
     document.getElementById('current-game-title').innerText = "1. 選擇分類方式";
     stage.innerHTML = `
-        <div style="text-align:center; padding-top:100px;">
+        <div style="text-align:center; padding-top:100px; width:100%;">
             <button class="btn-fixed" onclick="startSelection('fixed')">按類別分類</button>
             <button class="btn-free" onclick="startSelection('free')">自由分類</button>
         </div>`;
@@ -95,13 +90,14 @@ function startSelection(type) {
 function renderSelectionPage() {
     document.getElementById('current-game-title').innerText = "2. 選取練習詞彙";
     const stage = document.getElementById('game-stage');
+    stage.style.flexDirection = "column";
     stage.innerHTML = `
-        <button class="back-btn" onclick="renderLevelSelect()">⇠ 返回</button>
-        <div class="search-bar-container"><input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙名稱..." onkeyup="updateSelectionList(this.value.toLowerCase())"></div>
-        <div id="selection-content"></div>
-        <div style="text-align:right; margin-top:20px;"><button class="action-btn" style="background:#10AC84; padding:15px 35px; border-radius:15px; font-size:1.2rem;" onclick="proceed()">開始活動 ➔</button></div>`;
+        <div style="width:100%"><button class="back-btn" onclick="renderLevelSelect()">⇠ 返回</button></div>
+        <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙..." onkeyup="updateSelectionList(this.value.toLowerCase())">
+        <div id="selection-content" style="overflow-y:auto; flex-grow:1;"></div>
+        <div style="text-align:right; padding:10px;"><button class="nav-btn" style="background:#10AC84; padding:15px 40px; font-size:1.2rem;" onclick="proceed()">開始活動 ➔</button></div>`;
     updateSelectionList();
-    toggleTextDisplay(); // 即時套用隱藏文字設定
+    toggleTextDisplay();
 }
 
 function updateSelectionList(query = "") {
@@ -125,42 +121,44 @@ function updateSelectionList(query = "") {
 
 function toggleSelect(id) {
     const idx = selectedCards.findIndex(c => c.id === id);
-    if(idx > -1) selectedCards.splice(idx, 1);
-    else selectedCards.push(vocabList.find(v => v.id === id));
+    idx > -1 ? selectedCards.splice(idx, 1) : selectedCards.push(vocabList.find(v => v.id === id));
     updateSelectionList(document.getElementById('vocabSearch')?.value.toLowerCase() || "");
 }
 
 function proceed() {
-    if(selectedCards.length === 0) return alert("請先選取卡片");
+    if(selectedCards.length === 0) return alert("請選取卡片");
     gameType === 'free' ? runChallenge() : renderPrep();
 }
 
 function renderPrep() {
     document.getElementById('current-game-title').innerText = "3. 教學預覽";
     const stage = document.getElementById('game-stage');
+    stage.style.flexDirection = "column";
     const cats = [...new Set(selectedCards.map(c => c.category))];
     const colors = ["#FF6B6B", "#48DBFB", "#1DD1A1", "#Feca57"];
     stage.innerHTML = `
-        <button class="back-btn" onclick="renderSelectionPage()">⇠ 返回選取</button>
-        <div class="bin-container">
+        <div style="width:100%"><button class="back-btn" onclick="renderSelectionPage()">⇠ 返回選取</button></div>
+        <div class="bin-container" style="margin-top:20px;">
             ${cats.map((cat, i) => `
                 <div class="bin">
                     <div class="bin-header" style="background:${colors[i%4]}"><img src="images/categories/${cat}.png" onerror="this.style.display='none'"><span>${cat}</span></div>
                     <div class="drop-zone">${selectedCards.filter(c => c.category === cat).map(c => `<div class="card"><img src="images/${c.img}"><p>${c.name}</p></div>`).join('')}</div>
                 </div>`).join('')}
         </div>
-        <div style="text-align:center;"><button class="action-btn" style="background:#FF9F43; padding:20px 40px; border-radius:20px; font-size:1.3rem;" onclick="runChallenge()">正式開始遊戲！🚀</button></div>`;
+        <button class="nav-btn" style="background:#FF9F43; margin:20px auto; padding:20px 50px; font-size:1.5rem;" onclick="runChallenge()">正式開始遊戲！🚀</button>`;
     toggleTextDisplay();
 }
 
+// --- Challenge Logic (Split Screen) ---
 function runChallenge() {
     document.getElementById('current-game-title').innerText = "活動進行中";
     const stage = document.getElementById('game-stage');
-    const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["盒子 1", "盒子 2"];
+    stage.style.flexDirection = "row"; // Split screen
+    
+    const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["籃子 1", "籃子 2"];
     const colors = ["#FF6B6B", "#48DBFB", "#1DD1A1", "#Feca57"];
 
     stage.innerHTML = `
-        <button class="back-btn" onclick="${gameType==='free'?'renderSelectionPage()':'renderPrep()'}">⇠ 返回</button>
         <div id="pool" class="challenge-pool"></div>
         <div class="bin-container">
             ${cats.map((cat, i) => `
@@ -169,9 +167,11 @@ function runChallenge() {
                     <div class="drop-zone" data-cat="${cat}"></div>
                 </div>`).join('')}
         </div>
-        ${gameType==='free' ? '<button class="action-btn" style="background:#10AC84; margin:20px auto; display:block; padding:15px 40px; border-radius:20px; font-size:1.2rem;" onclick="finish()">完成活動 ✅</button>' : ''}`;
+        <div style="position:absolute; bottom:15px; left:15px; display:flex; gap:10px; z-index:200;">
+            <button class="back-btn" onclick="${gameType==='free'?'renderSelectionPage()':'renderPrep()'}">⇠ 返回</button>
+            ${gameType==='free' ? '<button class="nav-btn" style="background:#10AC84;" onclick="finish()">完成活動 ✅</button>' : ''}
+        </div>`;
 
-    toggleTextDisplay();
     const pool = document.getElementById('pool');
     [...selectedCards].sort(()=>0.5-Math.random()).forEach(c => {
         const d = document.createElement('div'); d.className='card'; d.dataset.cat=c.category;
@@ -179,11 +179,23 @@ function runChallenge() {
     });
 
     [pool, ...document.querySelectorAll('.drop-zone')].forEach(z => {
-        new Sortable(z, { group:'sort', animation:150, onAdd: (e) => { if(gameType==='fixed') check(); else if(e.to.id !== 'pool') showFX(e.item, true); } });
+        new Sortable(z, { 
+            group: 'sort', animation: 150, 
+            onAdd: (e) => { 
+                if(gameType === 'fixed' && e.to.id !== 'pool') {
+                    const ok = (e.item.dataset.cat === e.to.dataset.cat);
+                    showFX(e.item, ok); // Corrected Sound Logic
+                    checkAll();
+                } else if(gameType === 'free' && e.to.id !== 'pool') {
+                    showFX(e.item, true);
+                }
+            } 
+        });
     });
+    toggleTextDisplay();
 }
 
-function check() {
+function checkAll() {
     const pool = document.getElementById('pool');
     const bins = document.querySelectorAll('.bin .drop-zone');
     let mistakes = 0; let placed = 0;
@@ -191,12 +203,10 @@ function check() {
         const target = bin.dataset.cat;
         bin.querySelectorAll('.card').forEach(card => {
             placed++;
-            const ok = card.dataset.cat === target;
-            showFX(card, ok);
-            if(!ok) mistakes++;
+            if(card.dataset.cat !== target) mistakes++;
         });
     });
-    if(pool.children.length === 0 && mistakes === 0 && placed === selectedCards.length) finish();
+    if(pool.children.length === 0 && mistakes === 0 && placed === selectedCards.length) setTimeout(finish, 600);
 }
 
 function showFX(el, ok) {
@@ -204,7 +214,7 @@ function showFX(el, ok) {
     const fx = document.createElement('div'); fx.className = ok ? 'feedback-star' : 'feedback-wrong';
     fx.innerText = ok ? '⭐' : '❌'; el.appendChild(fx);
     const snd = document.getElementById(ok ? 'snd-star' : 'snd-wrong');
-    if(snd){ snd.currentTime=0; snd.play(); }
+    if(snd){ snd.pause(); snd.currentTime = 0; snd.play(); }
     setTimeout(() => fx.remove(), 800);
 }
 

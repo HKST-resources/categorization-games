@@ -1,15 +1,37 @@
 /** 1. DATA LOADER (Example with your 200 items) **/
 const bulkVocabData = `
-水果,蘋果,fruits/蘋果.png
-水果,香蕉,fruits/香蕉.png
-動物,獅子,animals/獅子.png
-動物,老虎,animals/老虎.png
-交通,巴士,transport/巴士.png
+水果	哈密瓜	水果/哈密瓜.png
+水果	士多啤梨	水果/士多啤梨.png
+水果	奇異果	水果/奇異果.png
+水果	提子	水果/提子.png
+水果	木瓜	水果/木瓜.png
+水果	楊桃	水果/楊桃.png
+水果	榴槤	水果/榴槤.png
+水果	橙	水果/橙.png
+水果	檸檬	水果/檸檬.png
+水果	火龍果	水果/火龍果.png
+水果	牛油果	水果/牛油果.png
+水果	芒果	水果/芒果.png
+水果	荔枝	水果/荔枝.png
+水果	菠蘿	水果/菠蘿.png
+水果	藍莓	水果/藍莓.png
+水果	蘋果	水果/蘋果.png
+水果	西瓜	水果/西瓜.png
+水果	車厘子	水果/車厘子.png
+水果	香蕉	水果/香蕉.png
+水果	龍眼	水果/龍眼.png
 `.trim();
 
+// 自動偵測分割符號 (支援 Tab 或 逗號)
 const vocabList = bulkVocabData.split('\n').map((line, i) => {
-    const [category, name, path] = line.split(',');
-    return { id: i, category: category.trim(), name: name.trim(), img: path.trim() };
+    // 使用正則表達式 [,\t] 同時匹配逗號或 Tab
+    const parts = line.split(/[,\t]/); 
+    return { 
+        id: i, 
+        category: parts[0]?.trim() || "未分類", 
+        name: parts[1]?.trim() || "無名稱", 
+        img: parts[2]?.trim() || parts[1]?.trim() + ".png" // 如果沒路徑就自動補 .png
+    };
 });
 
 let selectedCards = [];

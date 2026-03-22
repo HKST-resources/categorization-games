@@ -283,17 +283,17 @@ function playSoundEffect(type) {
     const originalSnd = document.getElementById(type === 'ok' ? 'snd-star' : (type === 'hooray' ? 'snd-hooray' : 'snd-wrong'));
     if (!originalSnd) return;
     const clone = originalSnd.cloneNode();
-    const context = new (window.AudioContext || window.webkitAudioContext)();
-    if (context.state === 'suspended') context.resume();
     clone.play().catch(e => console.warn("Audio play blocked", e));
 }
 
-// Slider logic
+function getCategoryImg(cat) {
+    return `images/${cat}/${cat}.png`;
+}
+
 document.getElementById('sizeSlider').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--img-size', `${e.target.value}px`);
 });
 
-// Background logic
 function changeBg(val) {
     if (val === 'white') {
         document.body.style.backgroundImage = "none";
@@ -343,23 +343,19 @@ function renderSelectionPage() {
     const cats = [...new Set(vocabList.map(v => v.category))];
     
     stage.innerHTML = `
-        <div class="selection-screen" style="padding-bottom: 100px;">
+        <div class="selection-screen" style="padding-bottom: 120px;">
             <div class="selection-controls">
                 <button class="nav-btn btn-back-selection" onclick="initGame('${currentGameMode}')">⇠ 返回</button>
-                
                 <div style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
                     <select id="catJumpMenu" onchange="const el = document.getElementById(this.value); if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});" 
-                            style="padding: 8px 12px; border-radius: 20px; border: 2px solid #ddd;">
+                            style="padding: 10px 15px; border-radius: 20px; border: 2px solid #f39c12; font-weight:bold;">
                         <option value="">🚀 跳轉至...</option>
                         ${cats.map(c => `<option value="cat-${c}">${c}</option>`).join('')}
                     </select>
-                    
                     <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙..." onkeyup="updateSelectionList(this.value)">
                 </div>
             </div>
-
             <div id="selection-scroll-area"></div>
-
             <div class="selection-footer">
                 <button class="btn-proceed" onclick="proceed()">
                     下一步 (已選: <span id="selCount">0</span>) ➔
@@ -378,13 +374,11 @@ function updateSelectionList(query = "") {
         const items = vocabList.filter(v => v.category === cat && v.name.includes(query));
         if (items.length > 0) {
             const allIn = items.every(i => selectedCards.some(s => s.id === i.id));
-            
             html += `
-                <div class="category-section" id="cat-${cat}" style="margin-bottom: 40px;">
-                    <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f8f9fa; border-left: 5px solid #3498db; border-radius: 5px; margin-bottom: 15px;">
-                        <span style="font-weight: bold; font-size: 1.2rem; color: #2c3e50;">${cat}</span>
-                        <button class="nav-btn" style="background: ${allIn ? '#e74c3c' : '#3498db'}; font-size: 0.8rem; padding: 5px 15px;" 
-                                onclick="toggleCat('${cat}')">
+                <div class="category-section" id="cat-${cat}">
+                    <div class="category-header">
+                        <span>${cat}</span>
+                        <button class="nav-btn" style="background: ${allIn ? '#e74c3c' : '#3498db'}; font-size: 0.8rem;" onclick="toggleCat('${cat}')">
                             ${allIn ? '取消全選' : '全選本類'}
                         </button>
                     </div>
@@ -401,10 +395,9 @@ function updateSelectionList(query = "") {
                 </div>`;
         }
     });
-    
     container.innerHTML = html;
     document.getElementById('selCount').innerText = selectedCards.length;
-    toggleTextDisplay(); // Maintain "Hide/Show Text" state
+    toggleTextDisplay();
 }
 
 function toggleCard(id) {
@@ -426,32 +419,38 @@ function toggleCat(catName) {
 
 function proceed() {
     if(selectedCards.length === 0) return alert("請至少選擇一張圖片");
-    if(currentGameMode === 'naming') {
-        renderNamingRules(); 
-    } else {
-        gameType === 'free' ? runChallenge() : renderPrep();
-    }
+    if(currentGameMode === 'naming') { renderNamingRules(); } 
+    else { gameType === 'free' ? runChallenge() : renderPrep(); }
 }
 
 // --- 5. CATEGORIZATION GAMEPLAY ---
 function renderPrep() {
     const stage = document.getElementById('game-stage');
     const cats = [...new Set(selectedCards.map(c => c.category))];
-    stage.innerHTML = `<div class="vertical-scroll">
-        <button class="nav-btn" style="background:#999; margin-bottom:20px;" onclick="renderSelectionPage()">⇠ 返回修改</button>
-        <div class="bin-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
-            ${cats.map((cat, i) => `
-            <div class="bin" style="background: rgba(255,255,255,0.8); border-radius: 15px; width: 300px; padding: 10px;">
-                <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}; padding: 10px; color: white; border-radius: 10px; text-align: center;">
-                    <span>${cat}</span>
-                </div>
-                <div class="drop-zone" style="min-height: 100px; display: flex; flex-wrap: wrap; gap: 5px; padding: 10px;">
-                    ${selectedCards.filter(c => c.category === cat).map(c => `<div class="card" style="width: 60px; text-align: center;"><img src="images/${c.img}" style="width: 100%;"><p style="font-size: 0.6rem;">${c.name}</p></div>`).join('')}
-                </div>
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center; padding:60px 0;"><button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button></div>
-    </div>`;
+    stage.innerHTML = `
+        <div style="height:100%; display:flex; flex-direction:column; align-items:center;">
+            <button class="nav-btn" style="background:#95a5a6; margin-bottom:10px;" onclick="renderSelectionPage()">⇠ 返回修改</button>
+            <div class="prep-container">
+                ${cats.map((cat, i) => {
+                    const color = categoryColors[i % categoryColors.length];
+                    return `
+                    <div class="prep-bin" style="border-color: ${color}">
+                        <div class="prep-bin-header" style="background: ${color}">
+                            <img src="${getCategoryImg(cat)}" onerror="this.style.display='none'">
+                            <span>${cat}</span>
+                        </div>
+                        <div class="drop-zone" style="padding:10px; display:flex; flex-wrap:wrap; gap:5px; justify-content:center;">
+                            ${selectedCards.filter(c => c.category === cat).map(c => `
+                                <div class="select-item" style="width: 80px; padding: 5px;">
+                                    <img src="images/${c.img}" style="width: 100%;">
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+            <button class="btn-start-game" onclick="runChallenge()">開始遊戲 🚀</button>
+        </div>`;
     toggleTextDisplay();
 }
 
@@ -459,40 +458,64 @@ function runChallenge() {
     const stage = document.getElementById('game-stage');
     const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["籃子 1", "籃子 2"];
     stage.innerHTML = `
-        <div id="challenge-container" style="display: flex; flex-direction: column; height: 100%;">
-            <div id="pool" style="background: rgba(255,255,255,0.5); min-height: 150px; padding: 20px; border-radius: 15px; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"></div>
-            <div class="bin-container" style="display: flex; gap: 20px; justify-content: center; flex-grow: 1;">
-                ${cats.map((cat, i) => `
-                    <div class="bin" style="background: white; border: 2px dashed #ccc; width: 350px; border-radius: 20px; display: flex; flex-direction: column;">
-                        <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}; padding: 15px; color: white; text-align: center; border-radius: 18px 18px 0 0;">
+        <div id="challenge-layout" style="display:flex; flex-direction:column; height:90vh; gap:15px;">
+            <div id="pool" style="background:rgba(255,255,255,0.3); min-height:160px; border-radius:25px; display:flex; flex-wrap:wrap; gap:10px; padding:15px; justify-content:center; border:4px dashed white;"></div>
+            <div class="prep-container" style="flex-grow:1;">
+                ${cats.map((cat, i) => {
+                    const color = categoryColors[i % categoryColors.length];
+                    return `
+                    <div class="prep-bin" style="border-color: ${color}">
+                        <div class="prep-bin-header" style="background: ${color}">
                             <span>${cat}</span>
                         </div>
-                        <div class="drop-zone" data-cat="${cat}" style="flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;"></div>
-                    </div>`).join('')}
+                        <div class="drop-zone" data-cat="${cat}" style="flex-grow:1; padding:10px; display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start;"></div>
+                    </div>`;
+                }).join('')}
             </div>
-            <button class="nav-btn" style="width: 100px; background:#999; margin-top: 10px;" onclick="renderSelectionPage()">退出</button>
+            <button class="nav-btn" style="width:120px; background:#95a5a6;" onclick="renderSelectionPage()">退出</button>
         </div>`;
-    
+
     const pool = document.getElementById('pool');
     [...selectedCards].sort(() => 0.5 - Math.random()).forEach(c => {
-        const d = document.createElement('div'); 
-        d.className = 'select-item'; 
+        const d = document.createElement('div');
+        d.className = 'select-item';
         d.dataset.cat = c.category;
-        d.style.width = "100px";
-        d.innerHTML = `<img src="images/${c.img}" style="width: 100%;"><p>${c.name}</p>`; 
+        d.style.position = "relative";
+        d.innerHTML = `<img src="images/${c.img}"><p>${c.name}</p>`;
         pool.appendChild(d);
     });
 
     [pool, ...document.querySelectorAll('.drop-zone')].forEach(z => {
-        new Sortable(z, { group: 'sort', animation: 150, onAdd: (e) => {
-            if (e.to.id !== 'pool') {
-                const ok = (gameType === 'free' || e.item.dataset.cat === e.to.dataset.cat);
-                playSoundEffect(ok ? 'ok' : 'wrong');
-                if(pool.children.length === 0 && ok) {
-                    confetti(); playSoundEffect('hooray');
+        new Sortable(z, {
+            group: 'sort',
+            animation: 250,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            forceFallback: true, 
+            onAdd: (e) => {
+                if (e.to.id !== 'pool') {
+                    const ok = (gameType === 'free' || e.item.dataset.cat === e.to.dataset.cat);
+                    const oldEmoji = e.item.querySelector('.feedback-overlay');
+                    if(oldEmoji) oldEmoji.remove();
+                    
+                    const emoji = document.createElement('div');
+                    emoji.className = 'feedback-overlay';
+                    emoji.innerText = ok ? '⭐' : '❌';
+                    e.item.appendChild(emoji);
+                    playSoundEffect(ok ? 'ok' : 'wrong');
+
+                    if(pool.children.length === 0) {
+                        const allCorrect = [...document.querySelectorAll('.drop-zone .feedback-overlay')].every(em => em.innerText === '⭐');
+                        if(allCorrect) { 
+                            setTimeout(() => { confetti(); playSoundEffect('hooray'); }, 300);
+                        }
+                    }
+                } else {
+                    const em = e.item.querySelector('.feedback-overlay');
+                    if(em) em.remove();
                 }
             }
-        }});
+        });
     });
     toggleTextDisplay();
 }
@@ -536,8 +559,7 @@ function renderNamingRules() {
                 </div>
             </div>
             <button class="nav-btn btn-naming" style="width:100%; font-size:2rem; padding:20px;" onclick="startNamingGame()">開始挑戰! 🚀</button>
-        </div>
-    `;
+        </div>`;
 }
 
 function setTimer(val, btn) {
@@ -557,7 +579,6 @@ function startNamingGame() {
     namedCount = 0;
     timeLeft = timerValue;
     timerActive = true;
-    
     stage.innerHTML = `
         <div class="game-play-area">
             <div class="timer-container" style="width:100%; background:#eee; height:40px; border-radius:20px; overflow:hidden; position:relative; margin-bottom:20px;">
@@ -568,8 +589,7 @@ function startNamingGame() {
             <h1 style="font-size:4rem; margin:10px 0; color:#2c3e50; background:rgba(255,255,255,0.7); padding:10px 50px; border-radius:100px;">${namingCategory}</h1>
             <button class="counter-btn" onclick="incrementNaming()">⭐</button>
             <div style="font-size:7rem; font-weight:900; color:#e67e22; margin-top:10px;" id="count-num">0</div>
-        </div>
-    `;
+        </div>`;
     startTimer();
 }
 
@@ -582,11 +602,7 @@ function startTimer() {
         const txt = document.getElementById('timer-text');
         if (bar) bar.style.width = `${(timeLeft / timerValue) * 100}%`;
         if (txt) txt.innerText = `${timeLeft}s`;
-
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            endGame();
-        }
+        if (timeLeft <= 0) { clearInterval(timerInterval); endGame(); }
     }, 1000);
 }
 
@@ -597,18 +613,11 @@ function incrementNaming() {
     playSoundEffect('ok');
 }
 
-function togglePause() {
-    timerActive = !timerActive;
-}
+function togglePause() { timerActive = !timerActive; }
 
 function endGame() {
-    if (timerType === 'bomb') {
-        playSoundEffect('wrong');
-        alert("💥 時間到！炸彈爆炸！");
-    } else {
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        playSoundEffect('hooray');
-    }
+    if (timerType === 'bomb') { playSoundEffect('wrong'); alert("💥 時間到！炸彈爆炸！"); } 
+    else { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); playSoundEffect('hooray'); }
     renderResults();
 }
 
@@ -627,23 +636,19 @@ function renderResults() {
                 ${selectedCards.map(c => `
                     <div class="select-item" onclick="this.classList.toggle('active'); playSoundEffect('ok');">
                         <img src="images/${c.img}"><p>${c.name}</p>
-                    </div>
-                `).join('')}
+                    </div>`).join('')}
             </div>
             <div style="margin-top:40px; display:flex; gap:20px;">
                 <button class="nav-btn btn-sorting" style="flex:2; font-size:1.5rem; padding:20px;" onclick="exportResults()">💾 下載報告圖片</button>
                 <button class="nav-btn" style="background:#95a5a6; flex:1;" onclick="initGame('naming')">再玩一次</button>
             </div>
-        </div>
-    `;
+        </div>`;
     toggleTextDisplay();
 }
 
 async function exportResults() {
-    // If report exists, capture report. Otherwise capture whole stage.
     const report = document.getElementById('final-report');
     const target = report ? report : document.getElementById('game-stage');
-    
     const canvas = await html2canvas(target, { useCORS: true, scale: 2 });
     const link = document.createElement('a');
     link.download = `活動紀錄_${namingCategory || '詞彙練習'}_${new Date().getTime()}.png`;

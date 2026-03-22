@@ -22,9 +22,13 @@
     </header>
 
     <div class="settings-bar">
-        <label>大小</label>
-        <input type="range" id="sizeSlider" min="100" max="300" value="150">
-        <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
+        <div class="settings-item">
+            <label>大小</label>
+            <input type="range" id="sizeSlider" min="100" max="300" value="150">
+        </div>
+        <div class="settings-item">
+            <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
+        </div>
         <select id="bgPicker">
             <option value="white">背景: 白色</option>
             <option value="park.jpg">草地</option>
@@ -34,11 +38,12 @@
             <option value="yellow.jpg">黃色</option>
             <option value="stripe.jpg">條紋</option>
         </select>
-        <button class="nav-btn" style="background:#888; padding:2px 10px;" onclick="takeScreenshot()">📸 匯出</button>
     </div>
 
     <div id="game-stage">
-        <h2 style="text-align:center; padding-top:100px; color:#666;">請選擇活動</h2>
+        <div style="text-align:center; padding-top:100px;">
+            <h2 style="color:#7f8c8d;">請選擇上方活動開始</h2>
+        </div>
     </div>
 </div>
 

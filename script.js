@@ -564,21 +564,21 @@ function startNamingGame() {
     <div class="explosion-fx" id="explosion"></div>
     
     <div class="game-hud">
-        <button id="pause-btn" class="nav-btn" style="background:#95a5a6; width:100px;" onclick="togglePause()">暫停</button>
+        <button id="pause-btn" class="nav-btn" style="background:#95a5a6; width:80px;" onclick="togglePause()">暫停</button>
         <div class="timer-track">
             <div id="timer-sprite" class="timer-sprite">${timerType==='bomb'?'🔥':'🏎️'}</div>
             <div id="timer-fill" class="timer-fill ${timerType}-style"></div>
         </div>
-        <div style="font-size:2rem; font-weight:bold; min-width:60px;" id="timer-text">${remainingTime}s</div>
+        <div style="font-size:1.5rem; font-weight:bold; min-width:50px;" id="timer-text">${remainingTime}s</div>
     </div>
 
     <div class="naming-main">
-        <div class="category-display" style="margin-bottom:20px;">${namingCategory}</div>
+        <div class="category-display">${namingCategory}</div>
         
         <button class="counter-btn" onclick="incrementNamed()">⭐</button>
         
         <div style="text-align:center;">
-            <p style="font-size:1.5rem; color:#7f8c8d; margin:0;">已命名數量</p>
+            <p style="font-size:1.2rem; color:#7f8c8d; margin-bottom:0;">已命名</p>
             <span id="count-num">0</span>
         </div>
     </div>`;

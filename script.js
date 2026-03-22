@@ -359,7 +359,7 @@ function renderNamingSelection() {
             <div class="selection-controls">
                 <button class="nav-btn" style="background:#999; padding: 5px 15px;" onclick="initGame('naming')">⇠</button>
                 <label>類別:</label>
-                <select id="catJumpMenu" onchange="document.getElementById('customCatInput').value=this.value; setNamingCat(this.value)">
+                <select id="catJumpMenu" onchange="document.getElementById('customCatInput').value=this.value; setNamingCat(this.value); document.getElementById('cat-' + this.value).scrollIntoView();">
                     <option value="">選擇...</option>
                     ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
                 </select>

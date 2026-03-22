@@ -258,6 +258,8 @@ const bulkVocabData = `
 數字	10	數字/10.png
 `.trim();
 
+const categoryColors = ["#FF6B6B", "#48DBFB", "#1DD1A1", "#FECA57", "#A29BFE", "#FAB1A0"];
+
 const vocabList = bulkVocabData.split('\n').map((line, i) => {
     const parts = line.split(/[,\t]/);
     return { id: i, category: parts[0]?.trim(), name: parts[1]?.trim(), img: parts[2]?.trim() };
@@ -266,9 +268,9 @@ const vocabList = bulkVocabData.split('\n').map((line, i) => {
 let selectedCards = [];
 let gameType = 'fixed';
 
-// Initial Settings
+// 1. Slider & UI Controls
 document.getElementById('sizeSlider').addEventListener('input', (e) => {
-    document.documentElement.style.setProperty('--card-size', `${e.target.value}px`);
+    document.documentElement.style.setProperty('--img-size', `${e.target.value}px`);
 });
 
 document.getElementById('bgPicker').addEventListener('change', (e) => {
@@ -278,10 +280,14 @@ document.getElementById('bgPicker').addEventListener('change', (e) => {
 
 function toggleTextDisplay() {
     const stage = document.getElementById('game-stage');
-    document.getElementById('textToggle').checked ? stage.classList.remove('hide-text') : stage.classList.add('hide-text');
+    if (document.getElementById('textToggle').checked) {
+        stage.classList.remove('hide-text');
+    } else {
+        stage.classList.add('hide-text');
+    }
 }
 
-// Navigation
+// 2. Navigation
 function initGame(mode) {
     if (mode === 'sorting') {
         const stage = document.getElementById('game-stage');
@@ -302,44 +308,31 @@ function startSelection(type) {
 function renderSelectionPage() {
     const stage = document.getElementById('game-stage');
     const cats = [...new Set(vocabList.map(v => v.category))];
-    
     stage.innerHTML = `
         <div class="selection-screen">
             <div class="selection-controls">
                 <button class="nav-btn" style="background:#999;" onclick="initGame('sorting')">⇠ 返回</button>
-                <select id="catJumpMenu" onchange="jumpTo(this.value)">
+                <select id="catJumpMenu" onchange="document.getElementById(this.value).scrollIntoView()">
                     <option value="">快速跳轉至...</option>
                     ${cats.map(c => `<option value="cat-${c}">${c}</option>`).join('')}
                 </select>
                 <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙..." onkeyup="updateSelectionList(this.value)">
             </div>
-            
             <div id="selection-scroll-area"></div>
-
             <div class="selection-footer">
                 <button class="nav-btn btn-naming" style="width:80%; font-size:1.6rem; padding:20px;" onclick="proceed()">下一步 (已選: <span id="selCount">0</span>) ➔</button>
             </div>
         </div>`;
-    
-    document.getElementById('current-game-title').innerText = "2. 選取練習項目";
     updateSelectionList();
-}
-
-function jumpTo(id) {
-    if(!id) return;
-    const el = document.getElementById(id);
-    if(el) el.scrollIntoView();
 }
 
 function updateSelectionList(query = "") {
     const container = document.getElementById('selection-scroll-area');
     const cats = [...new Set(vocabList.map(v => v.category))];
     let html = "";
-
     cats.forEach(cat => {
         const items = vocabList.filter(v => v.category === cat && v.name.includes(query));
         if (items.length > 0) {
-            const allIn = items.every(i => selectedCards.some(s => s.id === i.id));
             html += `
                 <div class="category-section" id="cat-${cat}">
                     <div class="category-header">
@@ -350,8 +343,7 @@ function updateSelectionList(query = "") {
                         ${items.map(item => {
                             const active = selectedCards.some(c => c.id === item.id) ? 'active' : '';
                             return `<div class="select-item ${active}" onclick="toggleCard(${item.id})">
-                                <img src="images/${item.img}">
-                                <p>${item.name}</p>
+                                <img src="images/${item.img}"><p>${item.name}</p>
                             </div>`;
                         }).join('')}
                     </div>
@@ -378,7 +370,7 @@ function toggleCat(catName) {
         if(allIn && idx > -1) selectedCards.splice(idx, 1);
         else if(!allIn && idx === -1) selectedCards.push(i);
     });
-    updateSelectionList(document.getElementById('vocabSearch').value);
+    updateSelectionList();
 }
 
 function proceed() {
@@ -386,6 +378,7 @@ function proceed() {
     gameType === 'free' ? runChallenge() : renderPrep();
 }
 
+// 3. Preparation Board
 function renderPrep() {
     const stage = document.getElementById('game-stage');
     const cats = [...new Set(selectedCards.map(c => c.category))];
@@ -393,52 +386,72 @@ function renderPrep() {
         <div class="vertical-scroll">
             <button class="nav-btn" style="background:#999; margin-bottom:20px;" onclick="renderSelectionPage()">⇠ 返回修改</button>
             <div class="bin-container">
-                ${cats.map(cat => `
+                ${cats.map((cat, i) => `
                     <div class="bin">
-                        <div class="bin-header">${cat}</div>
+                        <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
+                            <img src="images/categories/${cat}.png" onerror="this.style.display='none'">
+                            <span>${cat}</span>
+                        </div>
                         <div class="drop-zone">${selectedCards.filter(c => c.category === cat).map(c => `<div class="card"><img src="images/${c.img}"><p>${c.name}</p></div>`).join('')}</div>
                     </div>
                 `).join('')}
             </div>
-            <div style="text-align:center; padding:50px;">
-                <button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button>
-            </div>
+            <div style="text-align:center; padding:50px;"><button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button></div>
         </div>`;
     document.getElementById('current-game-title').innerText = "3. 預覽與教學";
     toggleTextDisplay();
 }
 
+// 4. Game Challenge
 function runChallenge() {
     const stage = document.getElementById('game-stage');
     const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["籃子 1", "籃子 2"];
-    
     stage.innerHTML = `
         <div class="challenge-layout">
             <div id="pool" class="challenge-pool"></div>
             <div class="bin-container">
-                ${cats.map(cat => `<div class="bin"><div class="bin-header">${cat}</div><div class="drop-zone" data-cat="${cat}"></div></div>`).join('')}
+                ${cats.map((cat, i) => `
+                    <div class="bin">
+                        <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
+                            ${gameType === 'fixed' ? `<img src="images/categories/${cat}.png" onerror="this.style.display='none'">` : ''}
+                            <span>${cat}</span>
+                        </div>
+                        <div class="drop-zone" data-cat="${cat}"></div>
+                    </div>`).join('')}
             </div>
-            <button class="nav-btn" style="position:absolute; bottom:20px; left:20px; background:#999;" onclick="renderSelectionPage()">退出</button>
+            <button class="nav-btn" style="position:absolute; bottom:15px; left:15px; background:#999; z-index:100;" onclick="renderSelectionPage()">退出</button>
         </div>`;
 
     const pool = document.getElementById('pool');
     [...selectedCards].sort(() => 0.5 - Math.random()).forEach(c => {
         const d = document.createElement('div'); d.className = 'card'; d.dataset.cat = c.category;
-        d.innerHTML = `<img src="images/${c.img}"><p>${c.name}</p>`;
-        pool.appendChild(d);
+        d.innerHTML = `<img src="images/${c.img}"><p>${c.name}</p>`; pool.appendChild(d);
     });
 
     [pool, ...document.querySelectorAll('.drop-zone')].forEach(z => {
         new Sortable(z, { group: 'sort', animation: 150, onAdd: (e) => {
             if (e.to.id !== 'pool') {
                 const ok = (gameType === 'free' || e.item.dataset.cat === e.to.dataset.cat);
-                const snd = document.getElementById(ok ? 'snd-star' : 'snd-wrong');
-                snd.currentTime = 0; snd.play();
-                if(pool.children.length === 0 && gameType === 'fixed') finish();
+                playFX(e.item, ok);
+                if(pool.children.length === 0 && gameType === 'fixed') {
+                    const mistakes = document.querySelectorAll('.bin .card').length !== selectedCards.length;
+                    if(!mistakes) finish();
+                }
             }
         }});
     });
+    document.getElementById('current-game-title').innerText = "進行活動中";
     toggleTextDisplay();
+}
+
+function playFX(el, ok) {
+    const fx = document.createElement('div');
+    fx.className = ok ? 'feedback-star' : 'feedback-wrong';
+    fx.innerText = ok ? '⭐' : '❌';
+    el.appendChild(fx);
+    const snd = document.getElementById(ok ? 'snd-star' : 'snd-wrong');
+    if(snd) { snd.pause(); snd.currentTime = 0; snd.play(); }
+    setTimeout(() => fx.remove(), 800);
 }
 
 function finish() {
@@ -447,9 +460,9 @@ function finish() {
 }
 
 async function takeScreenshot() {
-    const canvas = await html2canvas(document.getElementById('capture-area'), { useCORS: true });
+    const canvas = await html2canvas(document.getElementById('capture-area'), { useCORS: true, scale: 2 });
     const link = document.createElement('a');
-    link.download = `詞彙練習_${new Date().getTime()}.png`;
+    link.download = `活動紀錄_${new Date().getTime()}.png`;
     link.href = canvas.toDataURL();
     link.click();
 }

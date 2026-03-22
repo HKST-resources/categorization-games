@@ -1,84 +1,73 @@
 :root {
     --card-size: 150px;
-    --blue: #3498db; --orange: #e67e22; --grey: #bdc3c7; --green: #2ecc71;
+    --blue: #3498db; --orange: #e67e22; --grey: #bdc3c7; 
+    --green: #2ecc71; --muted-green: #2d6a4f; /* 深沉綠 */
 }
 
-body { margin: 0; font-family: "Microsoft JhengHei", sans-serif; transition: background 0.3s; }
+body { margin: 0; font-family: "Microsoft JhengHei", sans-serif; overflow-x: hidden; }
 .bg-grass { background: url('images/park.jpg') center/cover fixed; }
 .hidden { display: none !important; }
 
-/* 1. 頂部導航欄 */
+/* 頂部導航 */
 .top-bar {
     position: fixed; top: 0; left: 0; width: 100%; height: 60px;
     background: white; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; box-sizing: border-box; z-index: 1000;
+    padding: 0 20px; box-sizing: border-box; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.pill-btn {
-    border: none; border-radius: 10px; padding: 8px 25px; color: white;
-    font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s;
-}
+.pill-btn { border: none; border-radius: 10px; padding: 8px 20px; color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
 .btn-blue { background: var(--blue); }
 .btn-orange { background: var(--orange); }
 .btn-grey { background: var(--grey); }
 .btn-green { background: var(--green); }
-.pill-btn:active { transform: scale(0.95); }
+.btn-muted-green { background: var(--muted-green); }
+.btn-dark { background: rgba(0,0,0,0.6); } /* 用於橙色條上的按鈕 */
 
-.right-controls { display: flex; align-items: center; gap: 15px; font-size: 14px; }
-.ctrl-group { display: flex; align-items: center; gap: 5px; }
-
-/* 2. 主舞台與中央訊息 */
-#main-stage { margin-top: 60px; min-height: calc(100vh - 60px); position: relative; }
-.center-msg { height: 70vh; display: flex; justify-content: center; align-items: center; color: #7f8c8d; }
-
-/* 3. 遊戲模式選擇 (大按鈕) */
-.mode-menu { display: flex; justify-content: center; align-items: center; height: 70vh; gap: 40px; }
-.big-mode-btn {
-    width: 320px; height: 180px; border-radius: 25px; border: none;
-    color: white; font-size: 36px; font-weight: bold; cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-/* 4. 圖片選取頁導航 */
+/* 選取頁面固定工具列 */
 .selection-nav {
-    background: rgba(255,255,255,0.9); border-radius: 50px; margin: 20px auto;
-    width: 95%; display: flex; align-items: center; padding: 10px 20px;
-    gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: sticky; top: 60px; z-index: 1500;
+    background: rgba(255,255,255,0.95); padding: 12px 20px;
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
-.search-container {
-    flex-grow: 1; position: relative; display: flex; align-items: center;
-}
-.search-container i { position: absolute; left: 15px; color: #999; }
-.search-input {
-    width: 100%; padding: 12px 12px 12px 40px; border-radius: 30px;
-    border: 2px solid #f1c40f; font-size: 18px; outline: none;
-}
-.nav-select { padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
 
-/* 5. 分類標題與網格 */
+/* 統一高度控制 */
+.nav-height-sync { height: 45px; box-sizing: border-box; }
+
+.search-container { flex-grow: 1; position: relative; }
+.search-container i { position: absolute; left: 15px; top: 14px; color: #999; }
+.search-input {
+    width: 100%; padding-left: 45px; border-radius: 25px;
+    border: 2px solid #f1c40f; font-size: 16px; outline: none;
+}
+.nav-select { border-radius: 10px; border: 1px solid #ccc; padding: 0 10px; min-width: 150px; }
+
+/* 分類標題 */
 .category-header-bar {
     background: var(--orange); color: white; padding: 10px 25px;
     border-radius: 15px; margin: 20px; display: flex;
     justify-content: space-between; align-items: center;
 }
+
+/* 網格系統 */
 .grid-container {
     display: grid; grid-template-columns: repeat(auto-fill, var(--card-size));
-    gap: 20px; padding: 0 20px 100px 20px; justify-content: center;
+    gap: 20px; padding: 10px 25px 120px 25px; justify-content: center;
 }
 
-/* 6. 卡片設計 */
-.card {
-    background: white; border-radius: 20px; padding: 15px;
-    text-align: center; box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-    transition: 0.3s; cursor: pointer;
-}
-.card img { width: 100%; border-radius: 10px; pointer-events: none; }
-.card-label { margin-top: 10px; font-weight: bold; font-size: 18px; }
-.card.selected { outline: 5px solid var(--green); transform: scale(0.95); }
+/* 卡片與文字控制 */
+.card { background: white; border-radius: 15px; padding: 12px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; position: relative; }
+.card img { width: 100%; border-radius: 8px; pointer-events: none; }
+.card-label { margin-top: 8px; font-weight: bold; font-size: 16px; display: none; }
+body.show-text .card-label { display: block; }
+.card.selected { outline: 5px solid var(--green); transform: scale(0.96); }
 
-/* 下一步按鈕定位 */
-.next-step-btn {
-    position: fixed; bottom: 30px; right: 40px; z-index: 1100;
-    padding: 20px 40px; font-size: 24px; border-radius: 50px;
-    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
-}
+/* 準備看板/遊戲區域 */
+.drop-zone-wrap { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; padding: 20px; }
+.category-box { min-width: 300px; min-height: 350px; background: rgba(255,255,255,0.7); border-radius: 20px; border: 4px solid white; padding: 15px; }
+.source-box { border: 3px dashed white; border-radius: 20px; min-height: 150px; margin: 20px; background: rgba(255,255,255,0.2); display: flex; flex-wrap: wrap; justify-content: center; padding: 15px; }
+
+/* 下一步按鈕 */
+.next-step-btn { position: fixed; bottom: 30px; right: 30px; padding: 12px 30px; font-size: 18px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+.dragging { z-index: 3000 !important; opacity: 0.8; }

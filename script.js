@@ -268,7 +268,7 @@ const vocabList = bulkVocabData.split('\n').map((line, i) => {
 let selectedCards = [];
 let gameType = 'fixed';
 
-// 1. Settings
+// 1. 初始化與全域控制
 document.getElementById('sizeSlider').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--img-size', `${e.target.value}px`);
 });
@@ -283,7 +283,7 @@ function toggleTextDisplay() {
     document.getElementById('textToggle').checked ? stage.classList.remove('hide-text') : stage.classList.add('hide-text');
 }
 
-// 2. Selection Logic
+// 2. 導航邏輯
 function initGame(mode) {
     if (mode === 'sorting') {
         const stage = document.getElementById('game-stage');
@@ -364,39 +364,45 @@ function proceed() {
     gameType === 'free' ? runChallenge() : renderPrep();
 }
 
-// 3. Game Pages
+// 3. 預覽板面 (修正滾動與高度裁切)
 function renderPrep() {
     const stage = document.getElementById('game-stage');
     const cats = [...new Set(selectedCards.map(c => c.category))];
     stage.innerHTML = `<div class="vertical-scroll">
         <button class="nav-btn" style="background:#999; margin-bottom:20px;" onclick="renderSelectionPage()">⇠ 返回修改</button>
-        <div class="bin-container">${cats.map((cat, i) => `
-            <div class="bin" style="flex:none; height:180px;">
+        <div class="bin-container" style="height: auto;"> ${cats.map((cat, i) => `
+            <div class="bin">
                 <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
                     <img src="images/categories/${cat}.png" onerror="this.style.display='none'"><span>${cat}</span>
                 </div>
                 <div class="drop-zone">${selectedCards.filter(c => c.category === cat).map(c => `<div class="card"><img src="images/${c.img}"><p>${c.name}</p></div>`).join('')}</div>
-            </div>`).join('')}</div>
-        <div style="text-align:center; padding:50px;"><button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button></div>
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center; padding:60px 0;"><button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button></div>
     </div>`;
     document.getElementById('current-game-title').innerText = "3. 預覽與教學";
     toggleTextDisplay();
 }
 
+// 4. 挑戰頁面 (自由模式加入完成按鈕)
 function runChallenge() {
     const stage = document.getElementById('game-stage');
     const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["籃子 1", "籃子 2"];
-    stage.innerHTML = `<div class="challenge-layout">
-        <div id="pool" class="challenge-pool"></div>
-        <div class="bin-container">${cats.map((cat, i) => `
-            <div class="bin">
-                <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
-                    ${gameType === 'fixed' ? `<img src="images/categories/${cat}.png" onerror="this.style.display='none'">` : ''}<span>${cat}</span>
-                </div>
-                <div class="drop-zone" data-cat="${cat}"></div>
-            </div>`).join('')}</div>
-        <button class="nav-btn" style="position:absolute; bottom:10px; left:10px; background:#999; z-index:100; font-size:0.8rem;" onclick="renderSelectionPage()">退出</button>
-    </div>`;
+    
+    stage.innerHTML = `
+        <div class="challenge-layout">
+            <div id="pool" class="challenge-pool"></div>
+            <div class="bin-container">${cats.map((cat, i) => `
+                <div class="bin">
+                    <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
+                        ${gameType === 'fixed' ? `<img src="images/categories/${cat}.png" onerror="this.style.display='none'">` : ''}<span>${cat}</span>
+                    </div>
+                    <div class="drop-zone" data-cat="${cat}"></div>
+                </div>`).join('')}
+            </div>
+            <button class="nav-btn" style="position:absolute; bottom:10px; left:10px; background:#999; z-index:100; font-size:0.8rem;" onclick="renderSelectionPage()">退出</button>
+            ${gameType === 'free' ? `<button id="btn-finish" class="btn-finish-trigger" onclick="finish()">完成活動 ✨</button>` : ''}
+        </div>`;
 
     const pool = document.getElementById('pool');
     [...selectedCards].sort(() => 0.5 - Math.random()).forEach(c => {
@@ -419,9 +425,8 @@ function runChallenge() {
     toggleTextDisplay();
 }
 
-// Fixed FX: Now uses absolute screen coordinates and cloned audio
+// 5. 反饋與特效
 function playFX(cardEl, ok) {
-    // 1. Position Logic
     const rect = cardEl.getBoundingClientRect();
     const fx = document.createElement('div');
     fx.className = 'feedback-fx';
@@ -431,11 +436,10 @@ function playFX(cardEl, ok) {
     document.body.appendChild(fx);
     setTimeout(() => fx.remove(), 800);
 
-    // 2. Sound Logic (Cloning ensures it plays every time)
     const originalSnd = document.getElementById(ok ? 'snd-star' : 'snd-wrong');
     if (originalSnd) {
         const clonedSnd = originalSnd.cloneNode();
-        clonedSnd.play().catch(e => console.log("Audio play failed:", e));
+        clonedSnd.play().catch(e => console.log("音效播失敗:", e));
     }
 }
 
@@ -443,6 +447,10 @@ function finish() {
     const snd = document.getElementById('snd-hooray');
     if(snd) snd.play();
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    
+    // 如果是自由模式，按完完成後把按鈕隱藏防止重複按
+    const btn = document.getElementById('btn-finish');
+    if(btn) btn.style.display = 'none';
 }
 
 async function takeScreenshot() {

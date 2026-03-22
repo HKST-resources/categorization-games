@@ -1,15 +1,16 @@
 :root { --img-size: 150px; }
 
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f2f5;
+    /* Sets park.jpg as the default starting background */
+    background-image: url('images/park.jpg'); 
+    background-color: #f0f2f5; /* Fallback color */
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     height: 100vh;
-    overflow: hidden; /* Prevents whole page bounce on iPad */
 }
 
 #game-container {
@@ -18,7 +19,6 @@ body {
     height: 100vh;
     max-width: 1200px;
     margin: 0 auto;
-    background: rgba(255,255,255,0.1);
 }
 
 .game-header {
@@ -34,14 +34,12 @@ body {
 .nav-group { display: flex; gap: 10px; }
 
 .settings-bar {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.9); /* Slight transparency looks better over the park image */
     padding: 10px 20px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     border-bottom: 1px solid #ddd;
-    flex-wrap: nowrap;
-    overflow-x: auto;
     flex-shrink: 0;
 }
 
@@ -52,20 +50,16 @@ body {
     position: relative;
 }
 
-/* --- The 3D Squeeze-Proof Button --- */
+/* 3D Star Button */
 .naming-main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
-    height: 80%;
+    justify-content: center;
+    height: 100%;
 }
 
 .counter-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
     width: 220px; 
     height: 200px; 
     font-size: 7rem;
@@ -75,6 +69,9 @@ body {
     box-shadow: 0 15px 0 #d35400;
     cursor: pointer;
     transition: all 0.05s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -83,9 +80,7 @@ body {
     box-shadow: 0 5px 0 #d35400;
 }
 
-#count-num { font-size: 6rem; font-weight: 900; color: #2c3e50; margin: 10px 0; }
-
-/* --- UI Elements --- */
+/* UI Helpers */
 .nav-btn {
     padding: 10px 20px;
     border-radius: 8px;
@@ -98,23 +93,6 @@ body {
 .btn-naming { background: #e67e22; }
 .btn-ran { background: #95a5a6; }
 
-.selection-footer {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: transparent !important;
-}
-
-.btn-proceed-small {
-    padding: 15px 40px;
-    font-size: 1.4rem;
-    background: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
-
 .selection-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -123,12 +101,18 @@ body {
 
 .select-item {
     background: white;
-    border: 3px solid transparent;
-    border-radius: 15px;
+    border: 3px solid #eee;
+    border-radius: 12px;
     padding: 10px;
     text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .select-item.active { border-color: #27ae60; background: #eafaf1; }
-.select-item img { width: 100%; height: 110px; object-fit: contain; }
+.select-item img { 
+    width: var(--img-size); 
+    height: auto; 
+    max-height: 150px; 
+    object-fit: contain; 
+}
 .hide-text p { display: none !important; }

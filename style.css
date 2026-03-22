@@ -191,7 +191,6 @@ body {
 }
 
 .counter-btn { 
-    .counter-btn {
     /* Use Flexbox to force alignment */
     display: inline-flex;
     align-items: center;

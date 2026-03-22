@@ -14,29 +14,37 @@
 <body>
 
 <div id="game-container">
-    <header class="game-header">
-        <div class="header-left">🗣️ 詞彙練習</div>
-        <div class="nav-group">
+    <header class="game-header" style="background: white; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; position: sticky; top: 0; z-index: 1000;">
+        
+        <div class="header-left-group" style="display: flex; gap: 10px; align-items: center;">
             <button class="nav-btn btn-sorting" onclick="initGame('sorting')">分類</button>
             <button class="nav-btn btn-naming" onclick="initGame('naming')">擴展性命名</button>
             <button class="nav-btn btn-ran" onclick="initGame('ran')">快速命名</button>
         </div>
-    </header>
 
-    <div class="settings-bar">
-        <label>大小</label>
-        <input type="range" id="sizeSlider" min="100" max="300" value="150">
-        <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
-        <select id="bgPicker" onchange="changeBg(this.value)">
-            <option value="white">背景: 白色</option>
-            <option value="park.jpg" selected>草地</option> 
-            <option value="road.jpg">馬路</option>
-            <option value="room.jpg">房間</option>
-            <option value="game.jpg">遊戲</option>
-            <option value="yellow.jpg">黃色</option>
-            <option value="stripe.jpg">條紋</option>
-        </select>
-    </div>
+        <div class="header-right-group" style="display: flex; gap: 15px; align-items: center; font-size: 0.9rem; color: #333;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label>大小</label>
+                <input type="range" id="sizeSlider" min="100" max="300" value="150" style="width: 80px;">
+            </div>
+
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap;">
+                <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
+            </label>
+
+            <select id="bgPicker" onchange="changeBg(this.value)" style="padding: 5px; border-radius: 5px;">
+                <option value="white">背景: 白色</option>
+                <option value="park.jpg" selected>草地</option> 
+                <option value="road.jpg">馬路</option>
+                <option value="room.jpg">房間</option>
+                <option value="game.jpg">遊戲</option>
+                <option value="yellow.jpg">黃色</option>
+                <option value="stripe.jpg">條紋</option>
+            </select>
+
+            <button class="nav-btn" style="background: #2ecc71; padding: 8px 15px;" onclick="exportResults()">💾 匯出</button>
+        </div>
+    </header>
 
     <div id="game-stage">
         <div style="text-align:center; padding-top:100px;">

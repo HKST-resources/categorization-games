@@ -1,62 +1,72 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙學習活動</title>
+    <title>詞彙學習遊戲</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <div id="capture-zone" style="position: absolute; left: -9999px;"></div>
 </head>
-<body>
+<body class="bg-grass">
 
-<div id="game-container">
-    <header class="game-header" style="background: white; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; position: sticky; top: 0; z-index: 1000;">
-        
-        <div class="header-left-group" style="display: flex; gap: 10px; align-items: center;">
-            <button class="nav-btn btn-sorting" onclick="initGame('sorting')">分類</button>
-            <button class="nav-btn btn-naming" onclick="initGame('naming')">擴展性命名</button>
-            <button class="nav-btn btn-ran" onclick="initGame('ran')">快速命名</button>
+    <header class="top-bar">
+        <div class="left-group">
+            <button class="game-btn" style="background: #FF9AA2;">分類遊戲</button>
+            <button class="game-btn" style="background: #FFDAC1;">擴展性命名</button>
+            <button class="game-btn" style="background: #E2F0CB;">快速命名</button>
         </div>
-
-        <div class="header-right-group" style="display: flex; gap: 15px; align-items: center; font-size: 0.9rem; color: #333;">
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <label>大小</label>
-                <input type="range" id="sizeSlider" min="100" max="300" value="150" style="width: 80px;">
+        <div class="right-group">
+            <div class="control-item">
+                <span>圖片大小</span>
+                <input type="range" id="sizeSlider" min="80" max="250" value="150">
             </div>
-
-            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap;">
-                <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
-            </label>
-
-            <select id="bgPicker" onchange="changeBg(this.value)" style="padding: 5px; border-radius: 5px;">
-                <option value="white">背景: 白色</option>
-                <option value="park.jpg" selected>草地</option> 
-                <option value="road.jpg">馬路</option>
+            <label class="control-item"><input type="checkbox" id="textToggle" checked> 顯示文字</label>
+            <select id="bgSelect" class="control-item">
+                <option value="park.jpg">草地</option>
                 <option value="room.jpg">房間</option>
+                <option value="road.jpg">馬路</option>
                 <option value="game.jpg">遊戲</option>
                 <option value="yellow.jpg">黃色</option>
                 <option value="stripe.jpg">條紋</option>
+                <option value="white">白色背景</option>
             </select>
-
-            <button class="nav-btn" style="background: #2ecc71; padding: 8px 15px;" onclick="exportResults()">💾 匯出</button>
+            <button id="exportBtn" class="control-item">匯出</button>
         </div>
     </header>
 
-    <div id="game-stage">
-        <div style="text-align:center; padding-top:100px;">
-            <h2 style="color:#7f8c8d;">請選擇上方活動開始</h2>
-        </div>
-    </div>
-</div>
+    <main id="main-content">
+        <section id="mode-selection" class="screen">
+            <div class="center-menu">
+                <button class="big-btn" onclick="initSelection('by-category')">按類別分類</button>
+                <button class="big-btn" onclick="initSelection('free')">自由分類</button>
+            </div>
+        </section>
 
-<audio id="snd-star" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
-<audio id="snd-hooray" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
-<audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3"></audio>
+        <section id="picture-selection" class="screen hidden">
+            <nav class="selection-nav">
+                <div id="category-jumper"></div>
+                <input type="text" id="wordSearch" placeholder="🔍 搜尋詞彙..." oninput="filterWords()">
+            </nav>
+            <div id="picture-grid"></div>
+            <button id="proceedBtn" class="floating-btn" onclick="goToNextStage()">下一步：已選取 0 張</button>
+            <button class="back-btn" onclick="showScreen('mode-selection')">返回</button>
+        </section>
 
-<script src="script.js"></script>
+        <section id="game-stage" class="screen hidden">
+            <div id="drop-zones-container"></div>
+            <div id="source-container" class="source-box">
+                <p class="instruction-text">將圖片拖拽到下方方格中</p>
+            </div>
+            <div class="stage-controls">
+                <button id="startPlayBtn" class="big-btn" onclick="startActualGame()">開始遊戲</button>
+                <button id="finishBtn" class="big-btn hidden" onclick="triggerWin(true)">完成</button>
+                <button class="back-btn" onclick="showScreen('picture-selection')">返回</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>

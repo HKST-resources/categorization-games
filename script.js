@@ -268,7 +268,7 @@ const vocabList = bulkVocabData.split('\n').map((line, i) => {
 
 // State Management
 let selectedCards = [];
-let gameType = 'fixed'; // 'fixed', 'free', or 'naming'
+let gameType = 'fixed'; 
 let currentGameMode = ""; 
 let namedCount = 0;
 let namingCategory = "";
@@ -288,14 +288,23 @@ function playSoundEffect(type) {
     clone.play().catch(e => console.warn("Audio play blocked", e));
 }
 
+// Slider logic
 document.getElementById('sizeSlider').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--img-size', `${e.target.value}px`);
 });
 
-document.getElementById('bgPicker').addEventListener('change', (e) => {
-    document.body.style.background = e.target.value === 'white' ? "white" : `url('images/${e.target.value}') no-repeat center center fixed`;
-    document.body.style.backgroundSize = "cover";
-});
+// Background logic
+function changeBg(val) {
+    if (val === 'white') {
+        document.body.style.backgroundImage = "none";
+        document.body.style.backgroundColor = "white";
+    } else {
+        document.body.style.backgroundImage = `url('images/${val}')`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundAttachment = "fixed";
+    }
+}
 
 function toggleTextDisplay() {
     const stage = document.getElementById('game-stage');
@@ -334,16 +343,16 @@ function renderSelectionPage() {
     const cats = [...new Set(vocabList.map(v => v.category))];
     stage.innerHTML = `
         <div class="selection-screen">
-            <div class="selection-controls">
-                <button class="nav-btn" style="background:#999;" onclick="initGame('${currentGameMode === 'naming' ? 'naming' : 'sorting'}')">⇠ 返回</button>
-                <select id="catJumpMenu" onchange="document.getElementById(this.value).scrollIntoView()">
-                    <option value="">快速跳轉至...</option>
+            <div class="selection-controls" style="background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; margin-bottom: 15px;">
+                <button class="nav-btn" style="background:#999;" onclick="initGame('${currentGameMode}')">⇠ 返回</button>
+                <select id="catJumpMenu" onchange="const el = document.getElementById(this.value); if(el) el.scrollIntoView();" style="padding: 8px;">
+                    <option value="">快速跳轉...</option>
                     ${cats.map(c => `<option value="cat-${c}">${c}</option>`).join('')}
                 </select>
-                <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙..." onkeyup="updateSelectionList(this.value)">
+                <input type="text" id="vocabSearch" placeholder="🔍 搜尋詞彙..." onkeyup="updateSelectionList(this.value)" style="padding: 8px; width: 200px;">
             </div>
-            <div id="selection-scroll-area"></div>
-            <div class="selection-footer">
+            <div id="selection-scroll-area" style="max-height: 60vh; overflow-y: auto;"></div>
+            <div class="selection-footer" style="text-align: center; padding: 20px;">
                 <button class="nav-btn btn-naming" style="width:80%; font-size:1.6rem; padding:20px;" onclick="proceed()">下一步 (已選: <span id="selCount">0</span>) ➔</button>
             </div>
         </div>`;
@@ -357,8 +366,11 @@ function updateSelectionList(query = "") {
     cats.forEach(cat => {
         const items = vocabList.filter(v => v.category === cat && v.name.includes(query));
         if (items.length > 0) {
-            html += `<div class="category-section" id="cat-${cat}">
-                <div class="category-header"><span>${cat}</span><button class="nav-btn" style="background:rgba(0,0,0,0.2);" onclick="toggleCat('${cat}')">全選 / 取消</button></div>
+            html += `<div class="category-section" id="cat-${cat}" style="margin-bottom: 30px;">
+                <div class="category-header" style="background:#ecf0f1; padding: 10px; font-weight: bold; display: flex; justify-content: space-between;">
+                    <span>${cat}</span>
+                    <button class="nav-btn" style="background:#7f8c8d; font-size: 0.8rem;" onclick="toggleCat('${cat}')">全選 / 取消</button>
+                </div>
                 <div class="selection-grid">${items.map(item => {
                     const active = selectedCards.some(c => c.id === item.id) ? 'active' : '';
                     return `<div class="select-item ${active}" onclick="toggleCard(${item.id})"><img src="images/${item.img}"><p>${item.name}</p></div>`;
@@ -403,13 +415,15 @@ function renderPrep() {
     const cats = [...new Set(selectedCards.map(c => c.category))];
     stage.innerHTML = `<div class="vertical-scroll">
         <button class="nav-btn" style="background:#999; margin-bottom:20px;" onclick="renderSelectionPage()">⇠ 返回修改</button>
-        <div class="bin-container" style="height: auto;">
+        <div class="bin-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
             ${cats.map((cat, i) => `
-            <div class="bin">
-                <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
+            <div class="bin" style="background: rgba(255,255,255,0.8); border-radius: 15px; width: 300px; padding: 10px;">
+                <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}; padding: 10px; color: white; border-radius: 10px; text-align: center;">
                     <span>${cat}</span>
                 </div>
-                <div class="drop-zone">${selectedCards.filter(c => c.category === cat).map(c => `<div class="card"><img src="images/${c.img}"><p>${c.name}</p></div>`).join('')}</div>
+                <div class="drop-zone" style="min-height: 100px; display: flex; flex-wrap: wrap; gap: 5px; padding: 10px;">
+                    ${selectedCards.filter(c => c.category === cat).map(c => `<div class="card" style="width: 60px; text-align: center;"><img src="images/${c.img}" style="width: 100%;"><p style="font-size: 0.6rem;">${c.name}</p></div>`).join('')}
+                </div>
             </div>`).join('')}
         </div>
         <div style="text-align:center; padding:60px 0;"><button class="nav-btn btn-sorting" style="font-size:1.8rem; padding:25px 80px;" onclick="runChallenge()">正式開始 🚀</button></div>
@@ -420,23 +434,31 @@ function renderPrep() {
 function runChallenge() {
     const stage = document.getElementById('game-stage');
     const cats = gameType === 'fixed' ? [...new Set(selectedCards.map(c => c.category))] : ["籃子 1", "籃子 2"];
-    stage.innerHTML = `<div class="challenge-layout">
-            <div id="pool" class="challenge-pool"></div>
-            <div class="bin-container">${cats.map((cat, i) => `
-                <div class="bin">
-                    <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}">
-                        <span>${cat}</span>
-                    </div>
-                    <div class="drop-zone" data-cat="${cat}"></div>
-                </div>`).join('')}
+    stage.innerHTML = `
+        <div id="challenge-container" style="display: flex; flex-direction: column; height: 100%;">
+            <div id="pool" style="background: rgba(255,255,255,0.5); min-height: 150px; padding: 20px; border-radius: 15px; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"></div>
+            <div class="bin-container" style="display: flex; gap: 20px; justify-content: center; flex-grow: 1;">
+                ${cats.map((cat, i) => `
+                    <div class="bin" style="background: white; border: 2px dashed #ccc; width: 350px; border-radius: 20px; display: flex; flex-direction: column;">
+                        <div class="bin-header" style="background:${categoryColors[i % categoryColors.length]}; padding: 15px; color: white; text-align: center; border-radius: 18px 18px 0 0;">
+                            <span>${cat}</span>
+                        </div>
+                        <div class="drop-zone" data-cat="${cat}" style="flex-grow: 1; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;"></div>
+                    </div>`).join('')}
             </div>
-            <button class="nav-btn" style="position:absolute; bottom:10px; left:10px; background:#999; z-index:100;" onclick="renderSelectionPage()">退出</button>
+            <button class="nav-btn" style="width: 100px; background:#999; margin-top: 10px;" onclick="renderSelectionPage()">退出</button>
         </div>`;
+    
     const pool = document.getElementById('pool');
     [...selectedCards].sort(() => 0.5 - Math.random()).forEach(c => {
-        const d = document.createElement('div'); d.className = 'card'; d.dataset.cat = c.category;
-        d.innerHTML = `<img src="images/${c.img}"><p>${c.name}</p>`; pool.appendChild(d);
+        const d = document.createElement('div'); 
+        d.className = 'select-item'; 
+        d.dataset.cat = c.category;
+        d.style.width = "100px";
+        d.innerHTML = `<img src="images/${c.img}" style="width: 100%;"><p>${c.name}</p>`; 
+        pool.appendChild(d);
     });
+
     [pool, ...document.querySelectorAll('.drop-zone')].forEach(z => {
         new Sortable(z, { group: 'sort', animation: 150, onAdd: (e) => {
             if (e.to.id !== 'pool') {
@@ -479,14 +501,14 @@ function renderNamingRules() {
             <div style="margin-bottom:30px;">
                 <p style="font-size:1.2rem; font-weight:bold;">🕒 選擇時間:</p>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
-                    ${[5, 10, 15, 20, 25, 30].map(t => `<button class="time-btn ${t===30?'active':''}" style="padding:15px; font-size:1.2rem;" onclick="setTimer(${t}, this)">${t}秒</button>`).join('')}
+                    ${[5, 10, 15, 20, 25, 30].map(t => `<button class="time-btn ${t===timerValue?'active':''}" style="padding:15px; font-size:1.2rem;" onclick="setTimer(${t}, this)">${t}秒</button>`).join('')}
                 </div>
             </div>
             <div style="margin-bottom:40px;">
                 <p style="font-size:1.2rem; font-weight:bold;">🎭 倒數動畫:</p>
                 <div style="display:flex; gap:20px; justify-content:center;">
-                    <button class="mode-btn active" id="btn-racing" style="flex:1; padding:20px;" onclick="setTimerType('racing')">🏎️ 賽車</button>
-                    <button class="mode-btn" id="btn-bomb" style="flex:1; padding:20px;" onclick="setTimerType('bomb')">💣 炸彈</button>
+                    <button class="mode-btn ${timerType==='racing'?'active':''}" id="btn-racing" style="flex:1; padding:20px;" onclick="setTimerType('racing')">🏎️ 賽車</button>
+                    <button class="mode-btn ${timerType==='bomb'?'active':''}" id="btn-bomb" style="flex:1; padding:20px;" onclick="setTimerType('bomb')">💣 炸彈</button>
                 </div>
             </div>
             <button class="nav-btn btn-naming" style="width:100%; font-size:2rem; padding:20px;" onclick="startNamingGame()">開始挑戰! 🚀</button>
@@ -519,11 +541,8 @@ function startNamingGame() {
                 <div id="timer-text" style="position:absolute; width:100%; text-align:center; top:5px; font-weight:bold; font-size:1.5rem;">${timeLeft}s</div>
             </div>
             <button class="nav-btn" style="background:#8e44ad; margin-bottom:20px;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
-            
             <h1 style="font-size:4rem; margin:10px 0; color:#2c3e50; background:rgba(255,255,255,0.7); padding:10px 50px; border-radius:100px;">${namingCategory}</h1>
-            
             <button class="counter-btn" onclick="incrementNaming()">⭐</button>
-            
             <div style="font-size:7rem; font-weight:900; color:#e67e22; margin-top:10px;" id="count-num">0</div>
         </div>
     `;
@@ -531,6 +550,7 @@ function startNamingGame() {
 }
 
 function startTimer() {
+    if(timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         if (!timerActive) return;
         timeLeft--;
@@ -578,7 +598,6 @@ function renderResults() {
                 <div>目標時間: <b>${timerValue}秒</b></div>
                 <div>成功命名: <b style="color:#e67e22; font-size:2rem;">${namedCount}</b></div>
             </div>
-            
             <p style="font-weight:bold;">點擊確認孩子說出的範例詞彙:</p>
             <div class="selection-grid" style="max-height:400px; overflow-y:auto; padding:10px; border:1px solid #eee; border-radius:10px;">
                 ${selectedCards.map(c => `
@@ -587,7 +606,6 @@ function renderResults() {
                     </div>
                 `).join('')}
             </div>
-            
             <div style="margin-top:40px; display:flex; gap:20px;">
                 <button class="nav-btn btn-sorting" style="flex:2; font-size:1.5rem; padding:20px;" onclick="exportResults()">💾 下載報告圖片</button>
                 <button class="nav-btn" style="background:#95a5a6; flex:1;" onclick="initGame('naming')">再玩一次</button>
@@ -598,10 +616,13 @@ function renderResults() {
 }
 
 async function exportResults() {
+    // If report exists, capture report. Otherwise capture whole stage.
     const report = document.getElementById('final-report');
-    const canvas = await html2canvas(report, { useCORS: true, scale: 2 });
+    const target = report ? report : document.getElementById('game-stage');
+    
+    const canvas = await html2canvas(target, { useCORS: true, scale: 2 });
     const link = document.createElement('a');
-    link.download = `命名報告_${namingCategory}_${new Date().getTime()}.png`;
+    link.download = `活動紀錄_${namingCategory || '詞彙練習'}_${new Date().getTime()}.png`;
     link.href = canvas.toDataURL();
     link.click();
 }

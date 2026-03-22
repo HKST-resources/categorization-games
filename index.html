@@ -1,62 +1,51 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>詞彙學習活動</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-    <div id="bg-container">
-        <video id="bg-video" autoplay loop muted playsinline preload="auto" style="display:none;"></video>
-    </div>
-
-    <nav class="top-bar">
-        <div class="brand">🗣️ 詞彙練習</div>
-        
+<div id="game-container">
+    <header class="game-header">
+        <div class="header-left">🗣️ 詞彙練習</div>
         <div class="nav-group">
             <button class="nav-btn btn-sorting" onclick="initGame('sorting')">分類</button>
             <button class="nav-btn btn-naming" onclick="initGame('naming')">擴展性命名</button>
             <button class="nav-btn btn-ran" onclick="initGame('ran')">快速命名</button>
         </div>
+    </header>
 
-        <div class="nav-settings">
-            <div class="control-item">
-                <label>大小</label>
-                <input type="range" id="sizeSlider" min="80" max="300" value="160">
-            </div>
-            <div class="control-item">
-                <label><input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字</label>
-            </div>
-            <div class="control-item">
-                <select id="bgPicker">
-                    <option value="white">背景: 白色</option>
-                    <option value="park.jpg">草地</option>
-                    <option value="road.jpg">馬路</option>
-                    <option value="room.jpg">房間</option>
-                    <option value="game.jpg">遊戲</option>
-                    <option value="yellow.jpg">黃色</option>
-                    <option value="stripe.jpg">條紋</option>
-                </select>
-            </div>
-            <button class="export-btn" onclick="takeScreenshot()">📸 匯出</button>
-        </div>
-    </nav>
+    <div class="settings-bar">
+        <label>大小</label>
+        <input type="range" id="sizeSlider" min="100" max="300" value="150">
+        <input type="checkbox" id="textToggle" checked onchange="toggleTextDisplay()"> 顯示文字
+        <select id="bgPicker">
+            <option value="white">背景: 白色</option>
+            <option value="park.jpg">草地</option>
+            <option value="road.jpg">馬路</option>
+            <option value="room.jpg">房間</option>
+            <option value="game.jpg">遊戲</option>
+            <option value="yellow.jpg">黃色</option>
+            <option value="stripe.jpg">條紋</option>
+        </select>
+        <button class="nav-btn" style="background:#888; padding:2px 10px;" onclick="takeScreenshot()">📸 匯出</button>
+    </div>
 
-    <main id="capture-area">
-        <div id="game-header"><h2 id="current-game-title">請選擇活動</h2></div>
-        <div id="game-stage">
-            </div>
-    </main>
+    <div id="game-stage">
+        <h2 style="text-align:center; padding-top:100px; color:#666;">請選擇活動</h2>
+    </div>
+</div>
 
-    <audio id="snd-star" src="sounds/star.mp3"></audio>
-    <audio id="snd-wrong" src="sounds/wrong.mp3"></audio>
-    <audio id="snd-hooray" src="sounds/hooray.mp3"></audio>
+<audio id="snd-star" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+<audio id="snd-hooray" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+<audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3"></audio>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

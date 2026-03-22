@@ -8,7 +8,7 @@ body {
     overflow: hidden; background: url('images/park.jpg') no-repeat center center fixed; background-size: cover; 
 }
 
-/* --- Top Bar: Rigid One-Line --- */
+/* --- Top Bar --- */
 .top-bar { 
     height: var(--top-bar-height); background: rgba(255,255,255,0.95); border-bottom: 2px solid #ddd; 
     display: flex; align-items: center; padding: 0 20px; z-index: 2000; flex-shrink: 0;
@@ -16,7 +16,6 @@ body {
 .brand { font-weight: bold; font-size: 1.2rem; margin-right: 20px; flex-shrink: 0; }
 .nav-group { display: flex; gap: 10px; flex-shrink: 0; }
 .nav-settings { margin-left: auto; display: flex; align-items: center; gap: 20px; white-space: nowrap; flex-shrink: 0; }
-
 .control-item { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
 .nav-btn { padding: 10px 18px; border-radius: 12px; border: none; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
 .btn-sorting { background: #FF9F43; }
@@ -41,21 +40,17 @@ body {
 .select-item, .card { 
     background: white; border-radius: 15px; padding: 10px; text-align: center; border: 4px solid #fff;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; /* Essential for containing internal elements if needed */
 }
 .select-item.active { border-color: #10AC84; background: #e6fff9; }
 .select-item img, .card img { height: var(--img-size); width: auto; max-width: 100%; object-fit: contain; }
 
-/* --- Hide Text Mode --- */
 .hide-text .select-item, .hide-text .card { aspect-ratio: 1/1; }
 .hide-text p { display: none !important; }
 
-/* --- Game Challenge Layout (The Golden Rule) --- */
-.challenge-layout { 
-    display: flex; height: 100%; width: 100%; padding: 15px; gap: 15px; 
-    box-sizing: border-box; overflow: hidden; position: relative;
-}
+/* --- Game Challenge (The Golden Rule) --- */
+.challenge-layout { display: flex; height: 100%; width: 100%; padding: 15px; gap: 15px; box-sizing: border-box; overflow: hidden; position: relative; }
 
-/* Shuffle Pool (Left Side) */
 .challenge-pool { 
     width: 300px; border: 4px dashed #666; border-radius: 20px; padding: 10px;
     display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 10px; 
@@ -63,50 +58,28 @@ body {
 }
 .challenge-pool .card img { height: calc(var(--img-size) * 0.6); }
 
-/* Bin Container (Right Side) */
-.bin-container { 
-    flex-grow: 1; display: flex; flex-direction: column; 
-    height: 100%; gap: 10px; overflow: hidden; /* Force bins to stay in screen */
-}
+.bin-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; gap: 10px; overflow: hidden; }
 
-/* Bin Styling: Forced to share height */
-.bin { 
-    flex: 1; /* Key: Bins divide the height equally */
-    min-height: 0; /* Allows bins to shrink to fit */
-    display: flex; background: rgba(255,255,255,0.9); 
-    border-radius: 20px; border: 3px solid #ddd; overflow: hidden;
-}
-
-.bin-header { 
-    width: 120px; flex-shrink: 0; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center; color: white; font-weight: bold; padding: 5px;
-}
+.bin { flex: 1; min-height: 0; display: flex; background: rgba(255,255,255,0.9); border-radius: 20px; border: 3px solid #ddd; overflow: hidden; }
+.bin-header { width: 120px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-weight: bold; padding: 5px; text-align: center; }
 .bin-header img { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; }
 
-/* Drop Zone: Internal Scroll if many cards */
-.drop-zone { 
-    flex-grow: 1; padding: 10px; display: flex; flex-wrap: wrap; 
-    gap: 8px; overflow-y: auto; align-content: flex-start;
+.drop-zone { flex-grow: 1; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; overflow-y: auto; align-content: flex-start; }
+.drop-zone .card { max-height: 90%; padding: 5px; }
+.drop-zone .card img { height: auto; max-height: calc(var(--img-size) * 0.8); }
+
+/* Global Feedback FX (Fixed positioning) */
+.feedback-fx { 
+    position: fixed; font-size: 80px; z-index: 9999; 
+    pointer-events: none; animation: popUp 0.8s forwards; 
+    text-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+@keyframes popUp { 
+    0% { opacity: 0; transform: translateY(0) scale(0.5); } 
+    50% { opacity: 1; transform: translateY(-40px) scale(1.2); } 
+    100% { opacity: 0; transform: translateY(-60px) scale(1); } 
 }
 
-/* Prevent images from being cut inside bins */
-.drop-zone .card { 
-    max-height: 90%; /* Ensure card fits within the bin row */
-    padding: 5px; 
-}
-.drop-zone .card img { 
-    height: auto; 
-    max-height: calc(var(--img-size) * 0.8); /* Responsive height inside bins */
-}
-
-/* Feedback FX */
-.feedback-star, .feedback-wrong { 
-    position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-    font-size: 60px; z-index: 1000; animation: popUp 0.8s forwards; 
-}
-@keyframes popUp { 0% { opacity: 0; transform: translate(-50%, 10px); } 50% { opacity: 1; transform: translate(-50%, -10px); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
-
-/* Capture Area */
 #capture-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
 #game-stage { flex-grow: 1; overflow: hidden; }
 .vertical-scroll { overflow-y: auto; height: 100%; padding: 20px; box-sizing: border-box; }

@@ -1,96 +1,69 @@
 :root {
     --card-size: 110px;
-    --blue: #3498db;
-    --orange: #e67e22; /* 下一步按鈕改用橙色 */
-    --green: #80B816;
-    --grey: #bdc3c7;
+    --blue: #3498db; --orange: #e67e22; --green: #80B816; --grey: #bdc3c7;
 }
 
-/* 全域字體與背景優化 */
-body { 
-    margin: 0; 
-    font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; 
-    font-weight: 400; /* 確保字體不粗 */
+body {
+    margin: 0; font-family: "Microsoft JhengHei", sans-serif;
+    font-weight: normal; /* 移除非必要的粗體 */
     background: url('images/park.jpg') center/cover fixed;
-    user-select: none; -webkit-user-select: none;
-    touch-action: none;
-    overflow-x: hidden;
+    overflow-x: hidden; touch-action: none;
 }
 
-/* 頂部工具欄 */
+.hidden { display: none !important; }
+
+/* 頂部導覽列 */
 .top-bar {
-    position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 65px;
     background: white; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 15px; box-sizing: border-box; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 0 20px; box-sizing: border-box; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.pill-btn { 
-    border: none; border-radius: 10px; padding: 0 18px; color: white; 
-    cursor: pointer; font-size: 16px; font-weight: 400;
-    height: 40px; line-height: 40px; white-space: nowrap;
+.pill-btn {
+    border: none; border-radius: 8px; padding: 0 15px; color: white;
+    height: 38px; cursor: pointer; font-size: 15px; font-weight: normal;
+    display: flex; align-items: center; justify-content: center;
 }
 .btn-blue { background: var(--blue); }
 .btn-orange { background: var(--orange); }
 .btn-grey { background: var(--grey); }
 .btn-green { background: var(--green); }
+.bg-selector { background: white; color: black; border: 1px solid #ccc; }
 
-/* 卡片與網格系統 */
-.grid-layout { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, var(--card-size)); 
-    gap: 15px; padding: 15px; justify-content: center;
+/* 統一網格系統：確保卡片不變形 */
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--card-size));
+    gap: 20px; padding: 15px; justify-content: center;
 }
 
-.card { 
-    background: white; border-radius: 15px; padding: 10px; text-align: center; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: grab; 
-    width: var(--card-size); box-sizing: border-box;
-    position: relative; border: 4px solid transparent; /* 預留邊框位置 */
+.card {
+    background: white; border-radius: 12px; padding: 10px; text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: var(--card-size);
+    box-sizing: border-box; border: 4px solid transparent;
     transition: transform 0.1s, border-color 0.2s;
-    will-change: transform;
 }
 
-.card.selected { border-color: #2ecc71; } /* 選取時的綠色邊框 */
+/* 圖片選取時的綠色邊框 */
+.card.selected { border-color: #2ecc71; }
 
-.card img { width: 100%; border-radius: 8px; pointer-events: none; }
-.card-label { margin-top: 5px; font-size: 15px; display: none; }
+.card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 5px; pointer-events: none; }
+.card-label { margin-top: 8px; font-size: 14px; display: none; }
 body.show-text .card-label { display: block; }
 
-/* 分類框佈局 */
-.category-box { 
-    background: rgba(255,255,255,0.95);
-    border-radius: 25px; border: 5px solid; width: 420px; min-height: 250px; 
-    display: flex; flex-direction: column; overflow: hidden;
+/* 分類容器 */
+.category-box {
+    background: rgba(255,255,255,0.9); border-radius: 20px; border: 5px solid;
+    width: 420px; min-height: 250px; display: flex; flex-direction: column; overflow: hidden;
 }
-.cat-header { 
-    padding: 12px; color: white; font-size: 22px;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-}
-.cat-header img { width: 50px; height: 50px; object-fit: contain; }
+.cat-header { padding: 15px; color: white; font-size: 20px; text-align: center; font-weight: normal; }
+.inner-zone { flex: 1; }
 
-/* 遊戲階段專用樣式 */
-.game-screen {
-    display: flex; flex-direction: column; height: calc(100vh - 80px);
-    margin-top: 70px; padding: 10px; box-sizing: border-box;
-}
-.shuffle-area { 
-    border: 3px dashed rgba(255,255,255,0.8); border-radius: 20px; 
-    min-height: 140px; max-height: 25vh; overflow-y: auto;
-    background: rgba(255,255,255,0.3); margin-bottom: 10px;
-}
-.target-row { display: flex; justify-content: center; gap: 15px; flex: 1; min-height: 0; }
-.inner-zone { flex: 1; overflow-y: auto; }
-
-/* 懸浮按鈕 */
+/* 懸浮按鈕：改為橙色避免與草地重疊 */
 .floating-next {
     position: fixed; bottom: 30px; right: 30px; z-index: 2500;
-    height: 55px; padding: 0 35px; border-radius: 50px;
-    font-size: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    height: 60px; padding: 0 40px; border-radius: 50px; font-size: 20px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
 }
 
-.feedback-emoji {
-    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
-    font-size: 45px; z-index: 1000; pointer-events: none;
-    animation: popUp 0.6s ease-out forwards;
-}
-@keyframes popUp { 0% { opacity:0; top:0; } 50% { opacity:1; } 100% { opacity:0; top:-50px; } }
+.welcome-msg { text-align: center; margin-top: 200px; font-size: 24px; color: #666; }

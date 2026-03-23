@@ -3,53 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙學習活動</title>
+    <title>詞彙學習遊戲</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-<body class="show-text">
+<body class="bg-grass">
 
     <header class="top-bar">
-        <div class="left-nav">
-            <button id="nav-btn-sort" class="pill-btn btn-blue">分類遊戲</button>
-            <button class="pill-btn btn-orange">擴展性命名</button>
-            <button class="pill-btn btn-grey">快速命名</button>
+        <div class="left-group">
+            <button class="game-btn btn-blue">分類遊戲</button>
+            <button class="game-btn btn-orange">擴展性命名</button>
+            <button class="game-btn btn-grey">快速命名</button>
         </div>
-        
-        <div class="right-controls">
-            <div class="ctrl-group">
-                <span class="label-text">大小</span>
-                <input type="range" id="sizeSlider" min="80" max="250" value="120">
+        <div class="right-group">
+            <div class="control-item">
+                <span>圖片大小</span>
+                <input type="range" id="sizeSlider" min="80" max="250" value="150">
             </div>
-            <label class="ctrl-group">
-                <input type="checkbox" id="textToggle" checked> 顯示文字
-            </label>
-            <select id="bgSelect" class="ctrl-group nav-height-sync">
-                <option value="park.jpg" selected>公園</option>
+            <label class="control-item"><input type="checkbox" id="textToggle" checked> 顯示文字</label>
+            <select id="bgSelect" class="control-item nav-height-sync">
+                <option value="park.jpg" selected>草地</option>
                 <option value="room.jpg">房間</option>
                 <option value="road.jpg">馬路</option>
                 <option value="game.jpg">遊戲</option>
                 <option value="yellow.jpg">黃色</option>
                 <option value="stripe.jpg">條紋</option>
-                <option value="white">白色</option>
+                <option value="white">白色背景</option>
             </select>
-            <button id="exportBtn" class="pill-btn btn-export">
-                💾 匯出
-            </button>
+            <button id="exportBtn" class="pill-btn btn-green">匯出 💾</button>
         </div>
     </header>
 
-    <main id="main-stage">
-        <div id="welcome-msg" class="center-msg">
-            <h2>請選擇上方活動開始</h2>
+    <main id="main-content">
+        <div id="welcome-prompt" class="center-prompt">
+            <h1>請選擇上方活動開始</h1>
         </div>
+
+        <section id="mode-selection" class="screen hidden">
+            <div class="center-menu">
+                <button class="big-game-btn" onclick="startSelection('by-category')">按類別分類</button>
+                <button class="big-game-btn" onclick="startSelection('free')">自由分類</button>
+            </div>
+        </section>
+
+        <section id="picture-selection" class="screen hidden">
+            <nav class="selection-nav">
+                <div id="category-jumper"></div>
+                <input type="text" id="wordSearch" placeholder="🔍 搜尋詞彙..." oninput="filterWords()">
+            </nav>
+            <div id="picture-grid"></div>
+            <button class="back-btn" onclick="showScreen('mode-selection')">返回</button>
+        </section>
+
+        <section id="game-stage" class="screen hidden">
+            <div id="drop-zones-container"></div>
+            <div id="source-container" class="source-box"></div>
+            <div class="stage-controls">
+                <button id="startPlayBtn" class="action-btn" onclick="startActualGame()">開始遊戲🚀</button>
+                <button id="finishBtn" class="action-btn hidden" onclick="triggerWin(true)">完成</button>
+                <button class="back-btn" onclick="showScreen('picture-selection')">返回修改</button>
+            </div>
+        </section>
     </main>
 
-    <button id="global-next-btn" class="pill-btn btn-muted-green next-step-btn hidden">
-        下一步 (已選: 0) <i class="fa-solid fa-arrow-right"></i>
-    </button>
+    <button id="global-next-btn" class="floating-btn btn-orange hidden" onclick="proceedToNext()">下一步 (已選: 0) ➔</button>
 
     <script src="script.js"></script>
 </body>

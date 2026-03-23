@@ -3,40 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙學習活動</title>
+    <title>詞彙學習遊戲</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-<body>
+<body class="bg-grass">
 
-<header class="top-bar">
-    <div class="nav-left">
-        <button class="pill-btn btn-blue" id="nav-btn-sort">分類遊戲</button>
-        <button class="pill-btn btn-orange">擴展性命名</button>
-        <button class="pill-btn btn-grey">快速命名</button>
-    </div>
-    <div class="nav-right">
-        <div class="control-item">大小 <input type="range" id="sizeSlider" min="80" max="220" value="110"></div>
-        <div class="control-item"><input type="checkbox" id="textToggle" checked> 顯示文字</div>
-        <select id="bgSelect" class="bg-selector">
-            <option value="park.jpg">公園</option>
-            <option value="room.jpg">房間</option>
-            <option value="road.jpg">馬路</option>
-            <option value="game.jpg">遊戲</option>
-            <option value="yellow.jpg">黃色</option>
-            <option value="stripe.jpg">條紋</option>
-            <option value="white">白色</option>
-        </select>
-        <button id="exportBtn" class="pill-btn btn-green">匯出 💾</button>
-    </div>
-</header>
+    <header class="top-bar">
+        <div class="left-group">
+            <button class="game-btn btn-blue" id="btn-sort-game">分類遊戲</button>
+            <button class="game-btn btn-orange">擴展性命名</button>
+            <button class="game-btn btn-grey">快速命名</button>
+        </div>
+        <div class="right-group">
+            <div class="control-item"><span>大小</span><input type="range" id="sizeSlider" min="80" max="250" value="150"></div>
+            <label class="control-item"><input type="checkbox" id="textToggle" checked> 文字</label>
+            <select id="bgSelect" class="control-item">
+                <option value="park.jpg" selected>公園</option>
+                <option value="room.jpg">房間</option>
+                <option value="road.jpg">馬路</option>
+                <option value="game.jpg">遊戲</option>
+                <option value="yellow.jpg">黃色</option>
+                <option value="stripe.jpg">條紋</option>
+                <option value="white">白色</option>
+            </select>
+            <button id="exportBtn" class="pill-btn btn-green">匯出 💾</button>
+        </div>
+    </header>
 
-    <main id="main-stage">
-        <div class="welcome-msg">請選擇上方活動開始</div>
+    <main id="main-content">
+        <div id="welcome-prompt" class="center-prompt">
+            <h1>請選擇活動開始</h1>
+        </div>
+
+        <section id="mode-selection" class="screen hidden">
+            <div class="center-menu">
+                <button class="big-game-btn" onclick="startSelection('by-category')">按類別分類</button>
+                <button class="big-game-btn" onclick="startSelection('free')">自由分類</button>
+            </div>
+        </section>
+
+        <section id="picture-selection" class="screen hidden">
+            <nav class="selection-nav">
+                <div id="category-jumper"></div>
+                <input type="text" id="wordSearch" placeholder="🔍 搜尋詞彙..." oninput="filterWords()">
+            </nav>
+            <div id="picture-grid" class="grid-layout"></div>
+            <button id="proceed-btn" class="floating-btn btn-green hidden" onclick="proceedToNext()">下一步（已選：0）</button>
+        </section>
+
+        <section id="game-stage" class="screen hidden"></section>
     </main>
-
-    <button id="global-next-btn" class="pill-btn btn-orange floating-next hidden"></button>
 
     <script src="script.js"></script>
 </body>

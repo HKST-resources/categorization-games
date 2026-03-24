@@ -262,12 +262,12 @@ const library = rawDataString.trim().split('\n').map(line => {
     return { cat, name, path: `images/${path}` };
 });
 
-const colorPalette = ['#ff7eb9', '#4dabff', '#2ecc71', '#e67e22'];
+// 指定色號順序：粉紅、粉藍、綠、橙
+const colorPalette = ['#fb6764', '#4bd8f8', '#83bb21', '#e67e22'];
 const categories = [...new Set(library.map(i => i.cat))];
 let selectedItems = [];
 let gameMode = '';
 
-// 輔助功能：獲取類別顏色
 const getCatColor = (index) => colorPalette[index % colorPalette.length];
 
 // 2. 初始化
@@ -287,11 +287,10 @@ window.onload = function() {
 
     nextBtn.onclick = () => {
         nextBtn.classList.add('hidden');
-        if (gameMode === 'free') renderGameStage(); // 自由模式跳過預備看板
+        if (gameMode === 'free') renderGameStage();
         else renderPrepBoard();
     };
 
-    // 控制項
     document.getElementById('sizeSlider').oninput = (e) => document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
     document.getElementById('textToggle').onchange = (e) => document.body.classList.toggle('no-text', !e.target.checked);
     document.getElementById('bgSelect').onchange = (e) => document.body.style.background = e.target.value === 'white' ? 'white' : `url('images/${e.target.value}') center/cover fixed`;
@@ -375,7 +374,7 @@ function renderPrepBoard() {
             ${catsInGame.map((cat, idx) => `
                 <div class="category-box" style="border-color:${getCatColor(idx)}">
                     <div class="cat-header" style="background:${getCatColor(idx)}">
-                        <img src="images/${cat}/${cat}.png" onerror="this.style.display='none'">
+                        <img src="images/categories/${cat}.png" onerror="this.style.display='none'">
                         ${cat}
                     </div>
                     <div class="grid-layout">${selectedItems.filter(i => i.cat === cat).map(i => renderCardHTML(i, false)).join('')}</div>
@@ -384,7 +383,7 @@ function renderPrepBoard() {
         </div>
         <div style="text-align:center; padding:60px;">
             <button class="pill-btn btn-orange" id="start-game-btn" style="width:300px; height:80px; font-size:32px; border-radius:20px;">開始遊戲 🚀</button>
-            <br><button class="pill-btn btn-grey" onclick="enterSelection('${gameMode}')" style="margin-top:20px;">返回修改</button>
+            <br><button class="pill-btn btn-grey" onclick="enterSelection('${gameMode}')" style="margin-top:20px; box-shadow:none;">返回修改</button>
         </div>`;
     
     document.getElementById('start-game-btn').onclick = renderGameStage;
@@ -404,7 +403,7 @@ function renderGameStage() {
                     <div class="category-box target-zone" data-target="${isFree ? 'any' : cat}" style="border-color:${getCatColor(idx)}">
                         ${!isFree ? `
                         <div class="cat-header" style="background:${getCatColor(idx)}">
-                            <img src="images/${cat}/${cat}.png" onerror="this.style.display='none'">
+                            <img src="images/categories/${cat}.png" onerror="this.style.display='none'">
                             ${cat}
                         </div>` : ''}
                         <div class="inner-zone grid-layout" style="min-height:220px;"></div>
@@ -433,7 +432,6 @@ function initInteract() {
                 const t = event.target;
                 const x = (parseFloat(t.getAttribute('data-x')) || 0) + event.dx;
                 const y = (parseFloat(t.getAttribute('data-y')) || 0) + event.dy;
-                // 使用 translate3d 確保渲染流暢且不影響比例
                 t.style.transform = `translate3d(${x}px, ${y}px, 0)`;
                 t.setAttribute('data-x', x); t.setAttribute('data-y', y);
                 t.style.zIndex = 3000;
@@ -458,12 +456,10 @@ function initInteract() {
             const targetGrid = isTarget ? zone.querySelector('.inner-zone') : zone;
             targetGrid.appendChild(card);
             
-            // 重置卡片在 Grid 內的位置，防止比例跳掉
             card.style.transform = "none";
             card.setAttribute('data-x', 0); card.setAttribute('data-y', 0);
             card.style.zIndex = "";
 
-            // 自動完成檢測 (類別模式)
             if (gameMode === 'by-category' && document.getElementById('shuffle-box').children.length === 0) {
                 setTimeout(finishGame, 800);
             }

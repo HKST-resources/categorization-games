@@ -3,24 +3,48 @@
     --blue: #3498db; --orange: #e67e22; --green: #2ecc71; --grey: #bdc3c7;
 }
 
-body { margin: 0; font-family: sans-serif; transition: background 0.3s; overflow-x: hidden; touch-action: none; }
+body { 
+    margin: 0; 
+    font-family: "Microsoft JhengHei", sans-serif; 
+    transition: background 0.3s; 
+    overflow-x: hidden; 
+    touch-action: none; 
+}
 .bg-grass { background: url('images/park.jpg') center/cover fixed; }
 .hidden { display: none !important; }
 
+/* 頂部欄 */
 .top-bar {
-    position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 65px;
     background: white; display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; box-sizing: border-box; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
+
+/* 修正：為主內容增加頂部間距，避免被遮擋 */
+main {
+    padding-top: 100px; 
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
 .left-group, .right-group { display: flex; align-items: center; gap: 10px; }
 
 .game-btn, .pill-btn, .big-game-btn { 
     border: none; border-radius: 8px; padding: 10px 20px; color: white; cursor: pointer; font-weight: bold;
+    display: inline-flex; align-items: center; justify-content: center;
 }
 .btn-blue { background: var(--blue); }
 .btn-orange { background: var(--orange); }
 .btn-green { background: var(--green); }
 .btn-grey { background: var(--grey); }
+
+.center-prompt { text-align: center; margin-top: 50px; color: #444; }
+
+.center-menu {
+    display: flex; justify-content: center; gap: 30px; margin-top: 100px;
+}
+.big-game-btn { width: 220px; height: 120px; font-size: 24px; background: var(--blue); }
+.big-game-btn:last-child { background: var(--orange); }
 
 .grid-layout { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; gap: 15px; }
 
@@ -28,26 +52,14 @@ body { margin: 0; font-family: sans-serif; transition: background 0.3s; overflow
     width: var(--card-size); background: white; border-radius: 12px; padding: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center;
     border: 4px solid transparent; transition: transform 0.1s;
-    will-change: transform;
+    will-change: transform; cursor: pointer;
 }
 .card.selected { border-color: var(--green); }
 .card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; pointer-events: none; }
-.card-label { margin-top: 8px; font-weight: bold; font-size: 16px; }
+.card-label { margin-top: 8px; font-weight: bold; font-size: 16px; color: #333; }
 body.no-text .card-label { display: none; }
-
-.category-box {
-    background: rgba(255,255,255,0.9); border-radius: 20px; border: 4px solid var(--orange);
-    width: 400px; min-height: 250px; margin: 10px;
-}
-.cat-header { background: var(--orange); color: white; padding: 10px; text-align: center; border-radius: 15px 15px 0 0; }
 
 .floating-btn {
     position: fixed; bottom: 30px; right: 30px; z-index: 2100;
     padding: 20px 40px; border-radius: 50px; font-size: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-
-.feedback-emoji {
-    position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-    font-size: 40px; animation: popUp 0.6s forwards;
-}
-@keyframes popUp { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -30px); } }

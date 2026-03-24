@@ -10,85 +10,78 @@
 body {
     margin: 0; font-family: "Microsoft JhengHei", sans-serif;
     background: url('images/park.jpg') center/cover fixed;
-    overflow: hidden; height: 100vh; user-select: none;
+    height: 100vh; overflow: hidden; /* 防止整個頁面晃動 */
 }
 
-.hidden { display: none !important; }
-
-/* Top Bar */
+/* 頂部列樣式 */
 .top-bar {
     position: fixed; top: 0; left: 0; width: 100%; height: 65px;
-    background: white; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; box-sizing: border-box; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.95); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 20px; box-sizing: border-box; 
+    z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-.nav-right { display: flex; align-items: center; gap: 12px; }
 
-/* 修正 1 & 4: 卡片對齊與層級 */
+/* 核心容器：確保可以滾動 */
+#main-stage {
+    margin-top: 65px;
+    height: calc(100vh - 65px);
+    overflow-y: auto; /* 允許垂直滾動 */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 網格佈局：徹底防止重疊 */
 .grid-layout {
-    display: grid; 
+    display: grid;
     grid-template-columns: repeat(auto-fill, var(--card-size));
-    gap: 12px; padding: 12px; justify-content: center;
-    align-items: start; width: 100%; box-sizing: border-box;
+    gap: 20px; /* 增加間距 */
+    padding: 25px;
+    justify-content: center;
+    align-items: start;
 }
 
+/* 卡片美化 */
 .card {
-    background: white; border-radius: 12px; padding: 8px; text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: var(--card-size);
-    border: 4px solid transparent; cursor: grab;
-    display: flex; flex-direction: column; height: fit-content !important;
-    position: relative; touch-action: none;
-    transition: transform 0s; /* 拖拽時不延遲 */
+    background: white; 
+    border-radius: 20px; /* 更圓潤的角 */
+    padding: 12px; 
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1); /* 柔和陰影 */
+    width: var(--card-size);
+    border: 4px solid transparent;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    height: fit-content !important;
+    position: relative !important; /* 確保回歸網格流 */
+    transform: none !important; /* 強制移除拖拽殘留位移 */
+    transition: transform 0.2s, box-shadow 0.2s;
 }
-/* 修正 4: 拖拽時的漂浮狀態 */
-.card.dragging {
-    z-index: 10000 !important;
-    opacity: 0.9;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    pointer-events: none; /* 防止遮擋下方的 dropzone */
-}
+
+.card:hover { transform: translateY(-5px) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+.card.selected { border-color: var(--green); background: #f0fff0; }
 
 .card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; pointer-events: none; }
-.card-label { margin-top: 5px; font-size: 14px; font-weight: bold; color: #333; line-height: 1.2; }
+.card-label { margin-top: 10px; font-size: 16px; font-weight: bold; color: #333; }
 
-/* 遊戲階段佈局 */
+/* 類別標題列美化 */
+.category-title-bar {
+    background: var(--orange);
+    color: white;
+    margin: 20px;
+    padding: 12px 25px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 遊戲階段專用樣式 */
 #game-wrapper {
-    margin-top: 65px; height: calc(100vh - 65px);
-    display: flex; flex-direction: column; padding: 10px; box-sizing: border-box;
+    height: 100%; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box;
 }
-
-/* 修正 3: 增加洗牌區高度 */
 #shuffle-box {
-    height: 35%; /* 從 28% 提升到 35% */
-    background: rgba(255,255,255,0.4); border: 3px dashed white; border-radius: 20px;
-    margin-bottom: 10px; overflow: visible !important; /* 修正 4: 允許卡片飛出邊界 */
-    z-index: 10;
+    min-height: 180px; height: 35%; background: rgba(255,255,255,0.3);
+    border: 3px dashed white; border-radius: 25px; margin-bottom: 15px;
 }
-
-#zones-container {
-    flex: 1; display: flex; justify-content: center; gap: 10px; 
-    overflow: hidden; padding-bottom: 10px; /* 防止底部被切掉 */
-}
-
-.category-box {
-    flex: 1; min-width: 180px; background: rgba(255,255,255,0.9);
-    border-radius: 20px; border: 5px solid; display: flex; flex-direction: column;
-}
-
-/* 修正 3: 縮小標題列高度 */
-.cat-header {
-    padding: 6px 10px; color: white; font-size: 18px; font-weight: bold;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.cat-header img { height: 50px; width: 50px; object-fit: contain; }
-
-.inner-zone { flex: 1; overflow-y: auto; align-content: start; }
-
-/* 反饋圖標位置優化 */
-.feedback-emoji {
-    position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
-    font-size: 50px; z-index: 10001; animation: popUp 0.6s ease-out forwards;
-}
-@keyframes popUp { 
-    0% { opacity: 0; transform: translate(-50%, 20px); } 
-    100% { opacity: 0; transform: translate(-50%, -50px); } 
-}
+/* 拖拽中的卡片層級 */
+.card.dragging { z-index: 10000 !important; opacity: 0.8; transform: scale(1.1) !important; transition: none; }

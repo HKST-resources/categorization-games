@@ -1,4 +1,4 @@
-// 1. 資料庫設定
+// 1. 資料與配置
 const rawDataString = `水果	哈密瓜	水果/哈密瓜.png
 水果	士多啤梨	水果/士多啤梨.png
 水果	奇異果	水果/奇異果.png
@@ -262,66 +262,60 @@ const library = rawDataString.trim().split('\n').map(line => {
     return { cat, name, path: `images/${path}` };
 });
 
+const colorPalette = ['#ff7eb9', '#4dabff', '#2ecc71', '#e67e22'];
 const categories = [...new Set(library.map(i => i.cat))];
 let selectedItems = [];
 let gameMode = '';
 
-// 2. 初始化功能 (當網頁載入完成後)
+// 輔助功能：獲取類別顏色
+const getCatColor = (index) => colorPalette[index % colorPalette.length];
+
+// 2. 初始化
 window.onload = function() {
-    const mainStage = document.getElementById('main-stage');
     const nextBtn = document.getElementById('global-next-btn');
 
-    // 背景切換
-    document.getElementById('bgSelect').onchange = (e) => {
-        const val = e.target.value;
-        document.body.style.background = val === 'white' ? 'white' : `url('images/${val}') center/cover fixed`;
-    };
-
-    // --- 關鍵修正：分類遊戲按鈕點擊 ---
     document.getElementById('nav-btn-sort').onclick = () => {
         nextBtn.classList.add('hidden');
-        mainStage.innerHTML = `
-            <div style="text-align:center; padding-top:150px; display:flex; justify-content:center; gap:30px;">
-                <button class="pill-btn btn-blue" style="width:200px; height:100px; font-size:24px;" id="mode-cat">按類別分類</button>
-                <button class="pill-btn btn-orange" style="width:200px; height:100px; font-size:24px;" id="mode-free">自由分類</button>
+        document.getElementById('main-stage').innerHTML = `
+            <div style="text-align:center; padding-top:150px; display:flex; justify-content:center; gap:40px;">
+                <button class="pill-btn btn-blue" style="width:250px; height:120px; font-size:28px;" id="mode-cat">按類別分類</button>
+                <button class="pill-btn btn-pink" style="width:250px; height:120px; font-size:28px;" id="mode-free">自由分類</button>
             </div>`;
-        
-        // 綁定子模式按鈕
         document.getElementById('mode-cat').onclick = () => enterSelection('by-category');
         document.getElementById('mode-free').onclick = () => enterSelection('free');
     };
 
-    // 下一步按鈕點擊
     nextBtn.onclick = () => {
         nextBtn.classList.add('hidden');
-        renderPrepBoard();
+        if (gameMode === 'free') renderGameStage(); // 自由模式跳過預備看板
+        else renderPrepBoard();
     };
 
-    // 滑桿與文字切換
+    // 控制項
     document.getElementById('sizeSlider').oninput = (e) => document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
     document.getElementById('textToggle').onchange = (e) => document.body.classList.toggle('no-text', !e.target.checked);
+    document.getElementById('bgSelect').onchange = (e) => document.body.style.background = e.target.value === 'white' ? 'white' : `url('images/${e.target.value}') center/cover fixed`;
 };
 
 // 3. 圖片選取頁面
 function enterSelection(mode) {
     gameMode = mode;
     const mainStage = document.getElementById('main-stage');
-    
     mainStage.innerHTML = `
         <div class="selection-header">
             <button class="pill-btn btn-grey" onclick="location.reload()">返回</button>
-            <select class="pill-btn bg-selector" id="jumpSelect">
+            <select class="pill-btn" id="jumpSelect" style="background:white; color:black; border:1px solid #ccc;">
                 <option value="">🚀 跳轉至...</option>
                 ${categories.map(c => `<option value="section-${c}">${c}</option>`).join('')}
             </select>
-            <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
+            <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." style="flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; font-size:16px;">
         </div>
         <div id="selection-content">
             ${categories.map(cat => `
                 <div id="section-${cat}">
                     <div class="category-title-bar">
                         <span>${cat}</span>
-                        <button class="pill-btn" style="background:rgba(255,255,255,0.3); font-size:12px;" onclick="selectAllInCategory('${cat}')">全選本類</button>
+                        <button class="pill-btn btn-green" style="height:30px; font-size:14px; box-shadow:none;" onclick="selectAllInCategory('${cat}')">全選</button>
                     </div>
                     <div class="grid-layout" data-cat="${cat}">
                         ${library.filter(i => i.cat === cat).map(i => renderCardHTML(i, true)).join('')}
@@ -330,46 +324,37 @@ function enterSelection(mode) {
             `).join('')}
         </div>`;
 
-    // 綁定搜尋與跳轉
-    document.getElementById('searchInput').oninput = (e) => filterCards(e.target.value);
+    document.getElementById('searchInput').oninput = (e) => {
+        const q = e.target.value;
+        document.querySelectorAll('.card').forEach(c => c.style.display = c.dataset.name.includes(q) ? 'block' : 'none');
+    };
     document.getElementById('jumpSelect').onchange = (e) => {
         if(e.target.value) document.getElementById(e.target.value).scrollIntoView({behavior:'smooth', block:'center'});
     };
     updateNextButton();
 }
 
-// 渲染卡片 HTML
 function renderCardHTML(item, isSelectable) {
     const isSelected = selectedItems.some(s => s.path === item.path);
-    return `
-        <div class="card ${isSelected ? 'selected' : ''}" data-path="${item.path}" data-cat="${item.cat}" data-name="${item.name}" 
-             ${isSelectable ? 'onclick="toggleCard(this)"' : ''}>
-            <img src="${item.path}">
-            <div class="card-label">${item.name}</div>
-        </div>`;
+    return `<div class="card ${isSelected && isSelectable ? 'selected' : ''}" 
+                 data-path="${item.path}" data-cat="${item.cat}" data-name="${item.name}" 
+                 ${isSelectable ? 'onclick="toggleCard(this)"' : ''}>
+                <img src="${item.path}">
+                <div class="card-label">${item.name}</div>
+            </div>`;
 }
 
 function toggleCard(el) {
     const item = { cat: el.dataset.cat, path: el.dataset.path, name: el.dataset.name };
     const idx = selectedItems.findIndex(s => s.path === item.path);
-    if (idx > -1) {
-        selectedItems.splice(idx, 1);
-        el.classList.remove('selected');
-    } else {
-        selectedItems.push(item);
-        el.classList.add('selected');
-    }
+    if (idx > -1) { selectedItems.splice(idx, 1); el.classList.remove('selected'); }
+    else { selectedItems.push(item); el.classList.add('selected'); }
     updateNextButton();
 }
 
 function selectAllInCategory(cat) {
-    const cards = document.querySelectorAll(`.grid-layout[data-cat="${cat}"] .card`);
-    cards.forEach(card => { if (!card.classList.contains('selected')) toggleCard(card); });
-}
-
-function filterCards(q) {
-    document.querySelectorAll('.card').forEach(c => {
-        c.style.display = c.dataset.name.includes(q) ? 'block' : 'none';
+    document.querySelectorAll(`.grid-layout[data-cat="${cat}"] .card`).forEach(card => {
+        if (!card.classList.contains('selected')) toggleCard(card);
     });
 }
 
@@ -379,25 +364,27 @@ function updateNextButton() {
     nextBtn.classList.toggle('hidden', selectedItems.length === 0);
 }
 
-// 4. 準備看板
+// 4. 預備看板
 function renderPrepBoard() {
     const mainStage = document.getElementById('main-stage');
     const catsInGame = [...new Set(selectedItems.map(i => i.cat))];
+    
     mainStage.innerHTML = `
-        <div style="padding:20px; text-align:center;">
-            <button class="pill-btn btn-grey" onclick="enterSelection('${gameMode}')" style="display:inline-flex;">返回修改</button>
-            <h2 style="color:white; text-shadow:1px 1px 5px rgba(0,0,0,0.5);">檢查準備清單</h2>
-        </div>
+        <div class="game-title">預備...</div>
         <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; padding:0 20px;">
-            ${catsInGame.map(cat => `
-                <div class="category-box">
-                    <div class="cat-header">${cat}</div>
+            ${catsInGame.map((cat, idx) => `
+                <div class="category-box" style="border-color:${getCatColor(idx)}">
+                    <div class="cat-header" style="background:${getCatColor(idx)}">
+                        <img src="images/${cat}/${cat}.png" onerror="this.style.display='none'">
+                        ${cat}
+                    </div>
                     <div class="grid-layout">${selectedItems.filter(i => i.cat === cat).map(i => renderCardHTML(i, false)).join('')}</div>
                 </div>
             `).join('')}
         </div>
-        <div style="text-align:center; padding:50px;">
-            <button class="pill-btn btn-orange" style="height:70px; padding:0 60px; font-size:28px; border-radius:40px;" id="start-game-btn">開始遊戲 🚀</button>
+        <div style="text-align:center; padding:60px;">
+            <button class="pill-btn btn-orange" id="start-game-btn" style="width:300px; height:80px; font-size:32px; border-radius:20px;">開始遊戲 🚀</button>
+            <br><button class="pill-btn btn-grey" onclick="enterSelection('${gameMode}')" style="margin-top:20px;">返回修改</button>
         </div>`;
     
     document.getElementById('start-game-btn').onclick = renderGameStage;
@@ -406,37 +393,47 @@ function renderPrepBoard() {
 // 5. 遊戲階段
 function renderGameStage() {
     const mainStage = document.getElementById('main-stage');
-    const catsInGame = gameMode === 'free' ? ['分類區 A', '分類區 B'] : [...new Set(selectedItems.map(i => i.cat))];
+    const isFree = gameMode === 'free';
+    const catsInGame = isFree ? ['A', 'B'] : [...new Set(selectedItems.map(i => i.cat))];
     
     mainStage.innerHTML = `
         <div style="padding:15px;">
             <div id="shuffle-box" class="grid-layout"></div>
-            <div style="display:flex; justify-content:center; gap:25px; flex-wrap:wrap;">
-                ${catsInGame.map(cat => `
-                    <div class="category-box target-zone" data-target="${gameMode === 'free' ? 'any' : cat}">
-                        <div class="cat-header" style="background:var(--blue)">${cat}</div>
-                        <div class="inner-zone grid-layout" style="min-height:200px;"></div>
+            <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
+                ${catsInGame.map((cat, idx) => `
+                    <div class="category-box target-zone" data-target="${isFree ? 'any' : cat}" style="border-color:${getCatColor(idx)}">
+                        ${!isFree ? `
+                        <div class="cat-header" style="background:${getCatColor(idx)}">
+                            <img src="images/${cat}/${cat}.png" onerror="this.style.display='none'">
+                            ${cat}
+                        </div>` : ''}
+                        <div class="inner-zone grid-layout" style="min-height:220px;"></div>
                     </div>
                 `).join('')}
             </div>
-            ${gameMode === 'free' ? `<div style="text-align:center; padding:30px;"><button class="pill-btn btn-orange" style="height:55px; font-size:22px;" onclick="finishGame()">完成分類</button></div>` : ''}
+            <div style="text-align:center; padding:40px;">
+                <button class="pill-btn btn-orange" id="finish-game-btn" style="height:60px; padding:0 50px; font-size:24px;">完成 🏁</button>
+            </div>
         </div>`;
 
     const shuffleBox = document.getElementById('shuffle-box');
     [...selectedItems].sort(() => Math.random() - 0.5).forEach(item => {
-        shuffleBox.innerHTML += renderCardHTML(item, false);
+        shuffleBox.insertAdjacentHTML('beforeend', renderCardHTML(item, false));
     });
 
+    document.getElementById('finish-game-btn').onclick = finishGame;
     initInteract();
 }
 
 function initInteract() {
     interact('.card').draggable({
+        inertia: true,
         listeners: {
             move(event) {
                 const t = event.target;
                 const x = (parseFloat(t.getAttribute('data-x')) || 0) + event.dx;
                 const y = (parseFloat(t.getAttribute('data-y')) || 0) + event.dy;
+                // 使用 translate3d 確保渲染流暢且不影響比例
                 t.style.transform = `translate3d(${x}px, ${y}px, 0)`;
                 t.setAttribute('data-x', x); t.setAttribute('data-y', y);
                 t.style.zIndex = 3000;
@@ -460,12 +457,15 @@ function initInteract() {
 
             const targetGrid = isTarget ? zone.querySelector('.inner-zone') : zone;
             targetGrid.appendChild(card);
+            
+            // 重置卡片在 Grid 內的位置，防止比例跳掉
             card.style.transform = "none";
             card.setAttribute('data-x', 0); card.setAttribute('data-y', 0);
             card.style.zIndex = "";
 
+            // 自動完成檢測 (類別模式)
             if (gameMode === 'by-category' && document.getElementById('shuffle-box').children.length === 0) {
-                setTimeout(finishGame, 600);
+                setTimeout(finishGame, 800);
             }
         }
     });
@@ -476,7 +476,7 @@ function showFeedback(el, correct) {
     emo.className = 'feedback-emoji';
     emo.innerText = correct ? '⭐' : '❌';
     el.appendChild(emo);
-    setTimeout(() => emo.remove(), 600);
+    setTimeout(() => emo.remove(), 700);
 }
 
 function finishGame() {

@@ -302,7 +302,7 @@ function enterSelection(mode) {
     const stage = document.getElementById('main-stage');
     stage.innerHTML = `
         <div class="scrollable-content">
-            <div class="selection-header">
+            <div style="position:sticky; top:0; background:white; padding:10px 20px; z-index:2000; display:flex; gap:15px; border-bottom:1px solid #ddd;">
                 <button class="pill-btn btn-grey" onclick="location.reload()">返回</button>
                 <select class="pill-btn" id="jumpSelect" style="background:#eee; color:#333; border:1px solid #ccc; box-shadow:none;">
                     <option value="">🚀 跳轉至...</option>
@@ -313,7 +313,7 @@ function enterSelection(mode) {
             <div id="selection-content">
                 ${categories.map(cat => `
                     <div id="section-${cat}" style="padding:0 20px;">
-                        <div class="category-title-bar" style="background:var(--orange); color:white; padding:12px 20px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+                        <div style="background:var(--orange); color:white; padding:12px 20px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
                             <span style="font-size:20px; font-weight:bold;">${cat}</span>
                             <button class="pill-btn btn-green" style="height:30px; font-size:14px; box-shadow:none;" onclick="selectAllInCategory('${cat}')">全選</button>
                         </div>
@@ -410,10 +410,7 @@ function renderGameStage() {
                     </div>
                 `).join('')}
             </div>
-            ${isFree ? `
-            <div style="text-align:center; padding:10px;">
-                <button class="pill-btn btn-orange" id="finish-btn">完成 🏁</button>
-            </div>` : ''}
+            ${isFree ? `<div style="text-align:center; padding:10px;"><button class="pill-btn btn-orange" id="finish-btn">完成 🏁</button></div>` : ''}
         </div>`;
 
     const shuffleBox = document.getElementById('shuffle-box');
@@ -436,10 +433,7 @@ function initInteract() {
                 const y = (parseFloat(t.getAttribute('data-y')) || 0) + event.dy;
                 t.style.transform = `translate3d(${x}px, ${y}px, 0)`;
                 t.setAttribute('data-x', x); t.setAttribute('data-y', y);
-                t.style.zIndex = 10000; // 拖拽時絕對置頂
-            },
-            end(event) {
-                event.target.style.zIndex = "";
+                t.style.zIndex = 10000;
             }
         }
     });
@@ -458,17 +452,34 @@ function initInteract() {
                 new Audio(isCorrect ? 'sounds/star.mp3' : 'sounds/wrong.mp3').play().catch(()=>{});
             }
 
+            // 關鍵：將卡片加入網格並「歸零」座標以防重疊
             const targetGrid = isTarget ? zone.querySelector('.inner-zone') : zone;
             targetGrid.appendChild(card);
             card.style.transform = "none";
-            card.setAttribute('data-x', 0); card.setAttribute('data-y', 0);
+            card.style.zIndex = "";
+            card.setAttribute('data-x', 0);
+            card.setAttribute('data-y', 0);
 
-            // 自動完成偵測
+            // 結算檢查：必須全對且洗牌區清空
             if (gameMode === 'by-category' && document.getElementById('shuffle-box').children.length === 0) {
-                setTimeout(finishGame, 500);
+                if (checkAllCorrect()) {
+                    setTimeout(finishGame, 500);
+                }
             }
         }
     });
+}
+
+function checkAllCorrect() {
+    const zones = document.querySelectorAll('.target-zone');
+    for (let zone of zones) {
+        const targetCat = zone.dataset.target;
+        const cardsInZone = zone.querySelectorAll('.card');
+        for (let card of cardsInZone) {
+            if (card.dataset.cat !== targetCat) return false; // 只要有一張錯就不結算
+        }
+    }
+    return true;
 }
 
 function showFeedback(el, correct) {

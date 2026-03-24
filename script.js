@@ -1,4 +1,4 @@
-// 1. 資料與配置
+// 1. 資料庫 (請根據需要調整路徑)
 const rawDataString = `水果	哈密瓜	水果/哈密瓜.png
 水果	士多啤梨	水果/士多啤梨.png
 水果	奇異果	水果/奇異果.png
@@ -262,7 +262,6 @@ const library = rawDataString.trim().split('\n').map(line => {
     return { cat, name, path: `images/${path}` };
 });
 
-// 指定色號順序：粉紅、粉藍、綠、橙
 const colorPalette = ['#fb6764', '#4bd8f8', '#83bb21', '#e67e22'];
 const categories = [...new Set(library.map(i => i.cat))];
 let selectedItems = [];
@@ -278,7 +277,7 @@ window.onload = function() {
         nextBtn.classList.add('hidden');
         document.getElementById('main-stage').innerHTML = `
             <div style="text-align:center; padding-top:150px; display:flex; justify-content:center; gap:40px;">
-                <button class="pill-btn btn-blue" style="width:250px; height:120px; font-size:28px;" id="mode-cat">按類別分類</button>
+                <button class="pill-btn btn-orange" style="width:250px; height:120px; font-size:28px;" id="mode-cat">按類別分類</button>
                 <button class="pill-btn btn-pink" style="width:250px; height:120px; font-size:28px;" id="mode-free">自由分類</button>
             </div>`;
         document.getElementById('mode-cat').onclick = () => enterSelection('by-category');
@@ -313,7 +312,7 @@ function enterSelection(mode) {
             ${categories.map(cat => `
                 <div id="section-${cat}">
                     <div class="category-title-bar">
-                        <span>${cat}</span>
+                        <span style="font-weight:bold;">${cat}</span>
                         <button class="pill-btn btn-green" style="height:30px; font-size:14px; box-shadow:none;" onclick="selectAllInCategory('${cat}')">全選</button>
                     </div>
                     <div class="grid-layout" data-cat="${cat}">

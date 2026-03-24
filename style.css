@@ -1,9 +1,9 @@
 :root {
     --card-size: 130px;
-    /* 你的指定色號 */
     --pink: #fb6764; 
     --blue: #4bd8f8; 
     --green: #83bb21; 
+    --muted-green: #8da399; /* 新增：粉化綠 */
     --orange: #e67e22;
     --grey: #bdc3c7;
 }
@@ -12,7 +12,7 @@ body {
     margin: 0; font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
     background: url('images/park.jpg') center/cover fixed;
     overflow-x: hidden; touch-action: none;
-    user-select: none; /* 完全防止文字反白 */
+    user-select: none;
 }
 
 .hidden { display: none !important; }
@@ -28,7 +28,7 @@ body {
 
 main { padding-top: 85px; min-height: 100vh; box-sizing: border-box; }
 
-/* 3D 遊戲感按鈕 */
+/* 3D 按鈕樣式 */
 .pill-btn {
     border: none; border-radius: 12px; padding: 0 20px; color: white;
     height: 42px; cursor: pointer; font-weight: bold; font-size: 16px;
@@ -38,21 +38,25 @@ main { padding-top: 85px; min-height: 100vh; box-sizing: border-box; }
 }
 .pill-btn:active { transform: translateY(2px); box-shadow: 0 2px rgba(0,0,0,0.2); }
 
-.btn-blue { background: var(--blue); box-shadow: 0 4px #34a8c1; }
+/* 頂部按鈕指定顏色 */
 .btn-orange { background: var(--orange); box-shadow: 0 4px #d35400; }
+.btn-blue { background: var(--blue); box-shadow: 0 4px #34a8c1; }
+.btn-muted-green { background: var(--muted-green); box-shadow: 0 4px #6f867b; }
+
 .btn-pink { background: var(--pink); box-shadow: 0 4px #c95250; }
 .btn-grey { background: #95a5a6; box-shadow: 0 4px #7f8c8d; }
 .btn-green { background: var(--green); box-shadow: 0 4px #6a961b; }
 
-/* 網格系統 */
+/* 網格系統 - 修正：加入 align-items: start 防止卡片拉伸 */
 .grid-layout {
     display: grid;
     grid-template-columns: repeat(auto-fill, var(--card-size));
     gap: 20px; padding: 20px; justify-content: center;
+    align-items: start; /* 關鍵修正：確保卡片不被垂直拉伸 */
     width: 100%; box-sizing: border-box;
 }
 
-/* 圖片選取頁面導航 */
+/* 圖片選取導航 */
 .selection-header {
     position: sticky; top: 65px; z-index: 2500;
     background: rgba(255,255,255,0.95); padding: 12px 25px;
@@ -71,6 +75,7 @@ main { padding-top: 85px; min-height: 100vh; box-sizing: border-box; }
     box-shadow: 0 5px 15px rgba(0,0,0,0.08); width: var(--card-size);
     border: 5px solid transparent; cursor: pointer; position: relative;
     box-sizing: border-box;
+    height: fit-content; /* 確保高度隨內容縮放 */
 }
 .card.selected { border-color: var(--green); }
 .card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
@@ -89,7 +94,7 @@ body.no-text .card-label { display: none; }
 }
 .cat-header img { height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 15px; padding: 5px; }
 
-/* 遊戲專用 */
+/* 遊戲階段專用：洗牌區 */
 #shuffle-box {
     background: rgba(255,255,255,0.5); border: 4px dashed white; border-radius: 25px;
     min-height: 160px; width: 90%; margin: 0 auto 30px auto;

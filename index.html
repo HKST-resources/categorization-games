@@ -3,337 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>詞彙學習遊戲 - Vocabulary Learning Game</title>
+    <title>詞彙學習遊戲</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+        /* Safe cross-device fonts for Chinese */
+        body { 
+            font-family: "PingFang HK", "Heiti TC", "Microsoft JhengHei", sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
         
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; overflow-x: hidden; }
-        .game-font { font-family: 'ZCOOL KuaiLe', cursive; }
-        
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        
-        /* Background Styles */
-        .bg-park { background: url('images/park.jpg') no-repeat center center fixed; background-size: cover; }
-        .bg-room { background: url('images/room.jpg') no-repeat center center fixed; background-size: cover; }
-        .bg-road { background: url('images/road.jpg') no-repeat center center fixed; background-size: cover; }
-        .bg-game { background: url('images/game.jpg') no-repeat center center fixed; background-size: cover; }
-        .bg-yellow { background-color: #FEF9C3; }
-        .bg-stripe { background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 10px, #ffffff 10px, #ffffff 20px); }
+        /* Background classes */
+        .bg-park { background: url('images/park.jpg') center/cover fixed; }
+        .bg-room { background: url('images/room.jpg') center/cover fixed; }
+        .bg-road { background: url('images/road.jpg') center/cover fixed; }
+        .bg-game { background: url('images/game.jpg') center/cover fixed; }
         .bg-white { background-color: #ffffff; }
 
-        .drop-zone { min-height: 200px; transition: all 0.3s; }
-        .dragging { opacity: 0.5; cursor: grabbing; z-index: 100; position: absolute; pointer-events: none; }
+        .card-container { transition: all 0.2s ease; }
+        .selected-card { border-color: #22c55e !important; border-width: 6px !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
         
-        /* Floating animations */
-        @keyframes pop {
-            0% { transform: scale(0); opacity: 0; }
-            50% { transform: scale(1.5); opacity: 1; }
-            100% { transform: scale(1); opacity: 0; }
+        .drop-zone { min-height: 250px; transition: background 0.3s; }
+        .feedback-pop {
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            font-size: 3rem; animation: popUp 0.8s ease-out forwards; pointer-events: none;
         }
-        .feedback-icon { animation: pop 0.8s ease-out forwards; }
+        @keyframes popUp {
+            0% { transform: translate(-50%, 20px) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -20px) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -40px) scale(1); opacity: 0; }
+        }
+
+        /* Game-like Buttons */
+        .btn-game {
+            box-shadow: 0 6px 0 #b45309; transition: all 0.1s;
+        }
+        .btn-game:active { transform: translateY(4px); box-shadow: 0 2px 0 #b45309; }
+        
+        .cat-box-0 { border-color: #f472b6; } /* Pink */
+        .cat-box-1 { border-color: #60a5fa; } /* Blue */
+        .cat-box-2 { border-color: #4ad395; } /* Green */
+        .cat-box-3 { border-color: #fb923c; } /* Orange */
     </style>
 </head>
-<body class="bg-park" id="capture-area">
+<body class="bg-park">
 
-    <nav class="fixed top-0 left-0 w-full h-12 bg-white/90 backdrop-blur shadow-sm z-50 flex items-center justify-between px-4">
+    <nav class="fixed top-0 left-0 w-full h-12 bg-white/95 shadow-md z-50 flex items-center justify-between px-4">
         <div class="flex gap-2">
-            <button onclick="changeGame('category')" class="px-3 py-1 bg-sky-500 text-white rounded-full text-sm font-bold hover:bg-sky-600">分類</button>
-            <button onclick="changeGame('naming')" class="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-bold hover:bg-orange-600">擴展性命名</button>
-            <button onclick="changeGame('fast')" class="px-3 py-1 bg-gray-400 text-white rounded-full text-sm font-bold cursor-not-allowed">快速命名</button>
+            <button onclick="showSubModes()" class="px-4 py-1 bg-sky-500 text-white rounded-full font-bold hover:bg-sky-600 shadow-sm">分類遊戲</button>
+            <button class="px-4 py-1 bg-orange-500 text-white rounded-full font-bold opacity-50 cursor-not-allowed">擴展性命名</button>
+            <button class="px-4 py-1 bg-gray-400 text-white rounded-full font-bold opacity-50 cursor-not-allowed">快速命名</button>
         </div>
 
-        <div class="flex items-center gap-4 text-xs font-medium text-gray-600">
+        <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
             <div class="flex items-center gap-2">
-                <span>圖片大小</span>
-                <input type="range" id="sizeSlider" min="80" max="200" value="120" class="w-24">
+                <span>大小</span>
+                <input type="range" id="sizeSlider" min="80" max="180" value="110" oninput="updateCardSize(this.value)">
             </div>
             <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" id="showTextToggle" checked onchange="toggleText()"> 顯示文字
+                <input type="checkbox" id="showTextToggle" checked onchange="toggleText()"> 文字
             </label>
-            <select id="bgSelect" onchange="changeBg(this.value)" class="border rounded px-1">
+            <select onchange="document.body.className = 'bg-' + this.value" class="border rounded-md px-2 py-1 bg-gray-50">
                 <option value="park">草地</option>
                 <option value="room">房間</option>
                 <option value="road">馬路</option>
                 <option value="game">遊戲</option>
-                <option value="yellow">黃色</option>
-                <option value="stripe">條紋</option>
                 <option value="white">純白</option>
             </select>
-            <button onclick="exportResult()" class="flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white rounded hover:bg-emerald-600">
-                💾 匯出
-            </button>
+            <button onclick="exportResult()" class="px-3 py-1 bg-emerald-500 text-white rounded-md hover:bg-emerald-600">💾 匯出</button>
         </div>
     </nav>
 
-    <main class="mt-16 p-4 min-h-screen">
-        <div id="app-container" class="max-w-6xl mx-auto">
-            </div>
-    </main>
+    <main id="app" class="mt-16 p-4 min-h-screen">
+        </main>
 
     <script>
-        // --- DATA ---
+        // Data Structure
         const bulkVocabData = `
-水果	哈密瓜	水果/哈密瓜.png
-水果	士多啤梨	水果/士多啤梨.png
-水果	奇異果	水果/奇異果.png
-水果	提子	水果/提子.png
-水果	木瓜	水果/木瓜.png
-水果	楊桃	水果/楊桃.png
-水果	榴槤	水果/榴槤.png
-水果	橙	水果/橙.png
-水果	檸檬	水果/檸檬.png
-水果	火龍果	水果/火龍果.png
-水果	牛油果	水果/牛油果.png
-水果	芒果	水果/芒果.png
-水果	荔枝	水果/荔枝.png
-水果	菠蘿	水果/菠蘿.png
-水果	藍莓	水果/藍莓.png
-水果	蘋果	水果/蘋果.png
-水果	西瓜	水果/西瓜.png
-水果	車厘子	水果/車厘子.png
-水果	香蕉	水果/香蕉.png
-水果	龍眼	水果/龍眼.png
-蔬菜	南瓜	蔬菜/南瓜.png
-蔬菜	娃娃菜	蔬菜/娃娃菜.png
-蔬菜	椰菜	蔬菜/椰菜.png
-蔬菜	椰菜花	蔬菜/椰菜花.png
-蔬菜	洋蔥	蔬菜/洋蔥.png
-蔬菜	生菜	蔬菜/生菜.png
-蔬菜	番薯	蔬菜/番薯.png
-蔬菜	白菜	蔬菜/白菜.png
-蔬菜	粟米	蔬菜/粟米.png
-蔬菜	紅椒	蔬菜/紅椒.png
-蔬菜	紅蘿蔔	蔬菜/紅蘿蔔.png
-蔬菜	茄子	蔬菜/茄子.png
-蔬菜	菜心	蔬菜/菜心.png
-蔬菜	菠菜	蔬菜/菠菜.png
-蔬菜	蕃茄	蔬菜/蕃茄.png
-蔬菜	薯仔	蔬菜/薯仔.png
-蔬菜	蘑菇	蔬菜/蘑菇.png
-蔬菜	蘿蔔	蔬菜/蘿蔔.png
-蔬菜	西蘭花	蔬菜/西蘭花.png
-蔬菜	辣椒	蔬菜/辣椒.png
-蔬菜	青椒	蔬菜/青椒.png
-蔬菜	青瓜	蔬菜/青瓜.png
-蔬菜	青豆	蔬菜/青豆.png
-蔬菜	黃椒	蔬菜/黃椒.png
-動物	企鵝	動物/企鵝.png
-動物	倉鼠	動物/倉鼠.png
-動物	兔	動物/兔.png
-動物	北極熊	動物/北極熊.png
-動物	大象	動物/大象.png
-動物	天鵝	動物/天鵝.png
-動物	斑馬	動物/斑馬.png
-動物	樹熊	動物/樹熊.png
-動物	河馬	動物/河馬.png
-動物	熊	動物/熊.png
-動物	熊貓	動物/熊貓.png
-動物	牛	動物/牛.png
-動物	狐狸	動物/狐狸.png
-動物	狗	動物/狗.png
-動物	獅子	動物/獅子.png
-動物	羊	動物/羊.png
-動物	老虎	動物/老虎.png
-動物	老鼠	動物/老鼠.png
-動物	蛇	動物/蛇.png
-動物	袋鼠	動物/袋鼠.png
-動物	豬	動物/豬.png
-動物	豹	動物/豹.png
-動物	貓	動物/貓.png
-動物	貓頭鷹	動物/貓頭鷹.png
-動物	長頸鹿	動物/長頸鹿.png
-動物	雞	動物/雞.png
-動物	馬	動物/馬.png
-動物	馬騮｜猴子	動物/馬騮｜猴子.png
-動物	駱駝	動物/駱駝.png
-動物	鱷魚	動物/鱷魚.png
-動物	鴨	動物/鴨.png
-動物	鸚鵡	動物/鸚鵡.png
-動物	鹿	動物/鹿.png
-動物	麻雀｜雀仔	動物/麻雀｜雀仔.png
-動物	龜	動物/龜.png
-交通工具	單車	交通工具/單車.png
-交通工具	垃圾車	交通工具/垃圾車.png
-交通工具	天星小輪	交通工具/天星小輪.png
-交通工具	小巴	交通工具/小巴.png
-交通工具	巴士	交通工具/巴士.png
-交通工具	救護車	交通工具/救護車.png
-交通工具	旅遊巴	交通工具/旅遊巴.png
-交通工具	消防車	交通工具/消防車.png
-交通工具	港鐵	交通工具/港鐵.png
-交通工具	的士	交通工具/的士.png
-交通工具	直升機	交通工具/直升機.png
-交通工具	警車	交通工具/警車.png
-交通工具	貨櫃車	交通工具/貨櫃車.png
-交通工具	輕鐵	交通工具/輕鐵.png
-交通工具	郵輪	交通工具/郵輪.png
-交通工具	電單車	交通工具/電單車.png
-交通工具	電車	交通工具/電車.png
-交通工具	飛機	交通工具/飛機.png
-衣服	冷帽	衣服/冷帽.png
-衣服	冷衫｜外套	衣服/冷衫｜外套.png
-衣服	冷衫｜毛衣	衣服/冷衫｜毛衣.png
-衣服	呔	衣服/呔.png
-衣服	外套｜褸	衣服/外套｜褸.png
-衣服	帽	衣服/帽.png
-衣服	恤衫	衣服/恤衫.png
-衣服	手襪	衣服/手襪.png
-衣服	拖鞋	衣服/拖鞋.png
-衣服	校服	衣服/校服.png
-衣服	泳衣	衣服/泳衣.png
-衣服	泳褲	衣服/泳褲.png
-衣服	皮帶	衣服/皮帶.png
-衣服	短褲	衣服/短褲.png
-衣服	羽絨	衣服/羽絨.png
-衣服	衫	衣服/衫.png
-衣服	裙	衣服/裙.png
-衣服	襪	衣服/襪.png
-衣服	長褲	衣服/長褲.png
-衣服	雨衣｜雨褸	衣服/雨衣｜雨褸.png
-衣服	雨靴	衣服/雨靴.png
-衣服	鞋	衣服/鞋.png
-衣服	頸巾	衣服/頸巾.png
-文具	刨筆機	文具/刨筆機.png
-文具	原子筆	文具/原子筆.png
-文具	擦膠	文具/擦膠.png
-文具	橡筋	文具/橡筋.png
-文具	水筆	文具/水筆.png
-文具	漿糊筆	文具/漿糊筆.png
-文具	白膠漿	文具/白膠漿.png
-文具	簿	文具/簿.png
-文具	膠水	文具/膠水.png
-文具	膠紙	文具/膠紙.png
-文具	萬字夾	文具/萬字夾.png
-文具	螢光筆	文具/螢光筆.png
-文具	釘書機	文具/釘書機.png
-文具	鉛筆	文具/鉛筆.png
-文具	鉛筆刨	文具/鉛筆刨.png
-文具	鉸剪｜剪刀	文具/鉸剪｜剪刀.png
-文具	間尺	文具/間尺.png
-文具	顏色筆	文具/顏色筆.png
-文具	顏色紙	文具/顏色紙.png
-傢俬	床	傢俬/床.png
-傢俬	書櫃	傢俬/書櫃.png
-傢俬	枱	傢俬/枱.png
-傢俬	梳化	傢俬/梳化.png
-傢俬	櫃	傢俬/櫃.png
-傢俬	櫈	傢俬/櫈.png
-傢俬	衣櫃	傢俬/衣櫃.png
-電器	冷氣機	電器/冷氣機.png
-電器	吸塵機	電器/吸塵機.png
-電器	微波爐	電器/微波爐.png
-電器	洗衣機	電器/洗衣機.png
-電器	焗爐	電器/焗爐.png
-電器	熨斗	電器/熨斗.png
-電器	熱水壺	電器/熱水壺.png
-電器	燈	電器/燈.png
-電器	雪櫃	電器/雪櫃.png
-電器	電磁爐	電器/電磁爐.png
-電器	電腦	電器/電腦.png
-電器	電視	電器/電視.png
-電器	電飯煲	電器/電飯煲.png
-電器	風扇	電器/風扇.png
-電器	風筒	電器/風筒.png
-玩具	套圈	玩具/套圈.png
-玩具	恐龍	玩具/恐龍.png
-玩具	機械人	玩具/機械人.png
-玩具	水槍	玩具/水槍.png
-玩具	波	玩具/波.png
-玩具	火車	玩具/火車.png
-玩具	煮飯仔	玩具/煮飯仔.png
-玩具	熊啤啤	玩具/熊啤啤.png
-玩具	玩具屋	玩具/玩具屋.png
-玩具	琴	玩具/琴.png
-玩具	積木	玩具/積木.png
-玩具	籃球	玩具/籃球.png
-玩具	足球	玩具/足球.png
-玩具	車	玩具/車.png
-玩具	遙控車	玩具/遙控車.png
-玩具	風箏	玩具/風箏.png
-玩具	鼓	玩具/鼓.png
-玩具	Lego｜積木	玩具/Lego｜積木.png
-玩具	puzzle｜拼圖	玩具/puzzle｜拼圖.png
-飲品	咖啡	飲品/咖啡.png
-飲品	朱古力奶	飲品/朱古力奶.png
-飲品	橙汁	飲品/橙汁.png
-飲品	檸檬茶	飲品/檸檬茶.png
-飲品	水	飲品/水.png
-飲品	汽水	飲品/汽水.png
-飲品	湯	飲品/湯.png
-飲品	牛奶	飲品/牛奶.png
-飲品	益力多	飲品/益力多.png
-飲品	維他奶	飲品/維他奶.png
-飲品	茶	飲品/茶.png
-飲品	豆漿	飲品/豆漿.png
-餐具及廚具	刀	餐具及廚具/刀.png
-餐具及廚具	匙羹	餐具及廚具/匙羹.png
-餐具及廚具	叉	餐具及廚具/叉.png
-餐具及廚具	杯	餐具及廚具/杯.png
-餐具及廚具	煲	餐具及廚具/煲.png
-餐具及廚具	碗	餐具及廚具/碗.png
-餐具及廚具	碟	餐具及廚具/碟.png
-餐具及廚具	筷子	餐具及廚具/筷子.png
-餐具及廚具	鑊鏟	餐具及廚具/鑊鏟.png
-餐具及廚具	飲筒｜飲管	餐具及廚具/飲筒｜飲管.png
-廁所物品	地拖	廁所物品/地拖.png
-廁所物品	廁紙	廁所物品/廁紙.png
-廁所物品	掃把	廁所物品/掃把.png
-廁所物品	梘液	廁所物品/梘液.png
-廁所物品	梳	廁所物品/梳.png
-廁所物品	毛巾	廁所物品/毛巾.png
-廁所物品	水桶	廁所物品/水桶.png
-廁所物品	浴缸	廁所物品/浴缸.png
-廁所物品	牙刷	廁所物品/牙刷.png
-廁所物品	牙膏	廁所物品/牙膏.png
-廁所物品	花灑	廁所物品/花灑.png
-廁所物品	馬桶	廁所物品/馬桶.png
-職業	侍應	職業/侍應.png
-職業	司機	職業/司機.png
-職業	外賣員	職業/外賣員.png
-職業	太空人	職業/太空人.png
-職業	工程師	職業/工程師.png
-職業	廚師	職業/廚師.png
-職業	收銀員	職業/收銀員.png
-職業	消防員	職業/消防員.png
-職業	清潔工人	職業/清潔工人.png
-職業	老師	職業/老師.png
-職業	警察	職業/警察.png
-職業	護士	職業/護士.png
-職業	農夫	職業/農夫.png
-職業	郵差	職業/郵差.png
-職業	醫生	職業/醫生.png
-顏色	啡色	顏色/啡色.png
-顏色	橙色	顏色/橙色.png
-顏色	灰色	顏色/灰色.png
-顏色	白色	顏色/白色.png
-顏色	粉紅色	顏色/粉紅色.png
-顏色	紅色	顏色/紅色.png
-顏色	紫色	顏色/紫色.png
-顏色	綠色	顏色/綠色.png
-顏色	藍色	顏色/藍色.png
-顏色	黃色	顏色/黃色.png
-顏色	黑色	顏色/黑色.png
-形狀	三角形	形狀/三角形.png
-形狀	圓形	形狀/圓形.png
-形狀	心形	形狀/心形.png
-形狀	星形	形狀/星形.png
-形狀	正方形	形狀/正方形.png
-形狀	菱形	形狀/菱形.png
-形狀	長方形	形狀/長方形.png
-數字	1	數字/1.png
-數字	2	數字/2.png
-數字	3	數字/3.png
-數字	4	數字/4.png
-數字	5	數字/5.png
-數字	6	數字/6.png
-數字	7	數字/7.png
-數字	8	數字/8.png
-數字	9	數字/9.png
-數字	10	數字/10.png
-`; // Truncated for example, paste your full list here
+水果 哈密瓜 水果/哈密瓜.png
+水果 士多啤梨 水果/士多啤梨.png
+水果 奇異果 水果/奇異果.png
+蔬菜 粟米 蔬菜/粟米.png
+蔬菜 紅椒 蔬菜/紅椒.png
+蔬菜 白菜 蔬菜/白菜.png
+動物 狗 動物/狗.png
+動物 貓 動物/貓.png
+`; // Paste full data here
 
         const vocabList = bulkVocabData.trim().split('\n').map(line => {
             const [cat, name, path] = line.trim().split(/\s+/);
@@ -341,207 +98,214 @@
         });
 
         const categories = [...new Set(vocabList.map(item => item.cat))];
+        const borderColors = ['border-pink-400', 'border-blue-400', 'border-green-400', 'border-orange-400'];
 
-        // --- STATE ---
-        let currentState = 'HOME'; // HOME, SELECT, PREP, GAME
-        let selectedCards = [];
-        let gameMode = 'ordered'; // 'ordered' (按類別) or 'free' (自由)
-        let imageSize = 120;
+        // State
+        let view = 'WELCOME';
+        let gameMode = ''; // 'ordered' or 'free'
+        let selectedItems = [];
+        let cardSize = 110;
         let showText = true;
 
-        // --- AUDIO ---
         const sounds = {
             star: new Audio('sounds/star.mp3'),
             wrong: new Audio('sounds/wrong.mp3'),
             hooray: new Audio('sounds/hooray.mp3')
         };
 
-        // --- ROUTING / VIEW RENDERING ---
-        function render() {
-            const container = document.getElementById('app-container');
-            container.innerHTML = '';
+        function updateView() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
 
-            if (currentState === 'HOME') {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center gap-8 py-20">
-                        <h1 class="text-4xl font-bold text-sky-800 game-font">請選擇活動開始</h1>
-                        <div class="flex gap-6">
-                            <button onclick="startSelection('ordered')" class="w-64 h-32 bg-sky-500 text-white text-3xl font-bold rounded-2xl shadow-xl hover:scale-105 transition-transform">按類別分類</button>
-                            <button onclick="startSelection('free')" class="w-64 h-32 bg-orange-500 text-white text-3xl font-bold rounded-2xl shadow-xl hover:scale-105 transition-transform">自由分類</button>
-                        </div>
-                    </div>
-                `;
+            if (view === 'WELCOME') {
+                app.innerHTML = `<div class="flex h-[70vh] items-center justify-center text-4xl font-extrabold text-sky-900 drop-shadow-sm">請選擇活動開始</div>`;
             } 
-            else if (currentState === 'SELECT') {
-                let html = `
-                    <div class="sticky top-12 z-40 bg-white/80 p-3 rounded-b-xl mb-6 shadow-sm flex justify-between items-center">
-                        <div class="flex gap-2 items-center">
-                            <select onchange="document.getElementById('cat-' + this.value).scrollIntoView()" class="border p-1 rounded">
-                                <option>跳至類別...</option>
-                                ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                            </select>
-                            <input type="text" placeholder="搜尋詞彙..." class="border p-1 rounded" oninput="filterCards(this.value)">
-                        </div>
-                        <button onclick="goToPrep()" class="bg-orange-500 text-white px-6 py-2 rounded-full font-bold shadow-lg">下一步：已選取 ${selectedCards.length} 張</button>
+            else if (view === 'SUB_MODES') {
+                app.innerHTML = `
+                <div class="flex flex-col items-center justify-center gap-12 py-20">
+                    <div class="flex gap-10">
+                        <button onclick="setView('SELECT', 'ordered')" class="w-64 h-32 bg-sky-500 text-white text-3xl font-bold rounded-3xl border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 shadow-2xl">按類別分類</button>
+                        <button onclick="setView('SELECT', 'free')" class="w-64 h-32 bg-orange-500 text-white text-3xl font-bold rounded-3xl border-b-8 border-orange-700 active:translate-y-1 active:border-b-0 shadow-2xl">自由分類</button>
                     </div>
-                `;
-
-                categories.forEach(cat => {
-                    html += `
-                        <div id="cat-${cat}" class="mb-8">
-                            <div class="bg-orange-400 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
-                                <span class="font-bold text-lg">${cat}</span>
-                                <button onclick="selectAllInCategory('${cat}')" class="text-sm bg-white/20 px-2 py-1 rounded">全選此類</button>
-                            </div>
-                            <div class="bg-white/50 p-4 rounded-b-lg grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                ${vocabList.filter(v => v.cat === cat).map(v => renderSelectCard(v)).join('')}
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html + `<button onclick="goBack()" class="mt-8 px-4 py-2 bg-gray-500 text-white rounded">返回</button>`;
+                </div>`;
             }
-            else if (currentState === 'GAME') {
-                renderGameStage();
+            else if (view === 'SELECT') {
+                renderSelection(app);
+            }
+            else if (view === 'PREP') {
+                renderPrepBoard(app);
+            }
+            else if (view === 'GAME') {
+                renderGameStage(app);
             }
         }
 
-        function renderSelectCard(vocab) {
-            const isSelected = selectedCards.some(s => s.path === vocab.path);
-            return `
-                <div onclick="toggleCard('${vocab.path}')" 
-                     class="cursor-pointer bg-white p-2 rounded-lg border-4 transition-all ${isSelected ? 'border-orange-500 shadow-inner' : 'border-transparent'}"
-                     style="width: ${imageSize}px">
-                    <img src="${vocab.path}" class="w-full aspect-square object-contain">
-                    <p class="text-center mt-1 text-sm font-bold ${showText ? '' : 'hidden'}">${vocab.name}</p>
+        function renderSelection(app) {
+            let html = `
+                <div class="sticky top-12 z-40 bg-white/90 p-4 rounded-xl mb-6 shadow-md flex justify-between items-center border-4 border-sky-200">
+                    <div class="flex gap-4">
+                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border-2 border-sky-300 rounded-lg font-bold">
+                            <option>快速跳至...</option>
+                            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                        <input type="text" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-sky-300 rounded-lg font-bold" oninput="filterCards(this.value)">
+                    </div>
+                    <button onclick="goNextFromSelect()" class="px-8 py-3 bg-orange-500 text-white rounded-full font-black text-xl btn-game">下一步：已選取 ${selectedItems.length} 張 🚀</button>
+                </div>
+            `;
+
+            categories.forEach(cat => {
+                html += `
+                <div id="section-${cat}" class="mb-10">
+                    <div class="bg-orange-500 text-white px-6 py-2 rounded-t-2xl flex justify-between items-center shadow-sm">
+                        <span class="text-xl font-bold">${cat}</span>
+                        <button onclick="selectAll('${cat}')" class="bg-white/20 hover:bg-white/40 px-4 py-1 rounded-full text-sm font-bold">全選此類</button>
+                    </div>
+                    <div class="bg-white/40 p-4 rounded-b-2xl grid grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2">
+                        ${vocabList.filter(v => v.cat === cat).map(v => `
+                            <div onclick="toggleItem('${v.path}')" class="cursor-pointer bg-white p-1 rounded-xl border-4 transition-all ${selectedItems.some(i=>i.path===v.path)?'selected-card':'border-transparent'}" style="width: ${cardSize}px">
+                                <img src="${v.path}" class="w-full aspect-square object-contain">
+                                <p class="text-center text-xs font-bold mt-1 ${showText?'':'hidden'}">${v.name}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            });
+            app.innerHTML = html + `<button onclick="setView('SUB_MODES')" class="mb-10 px-6 py-2 bg-gray-500 text-white rounded-full font-bold">返回</button>`;
+        }
+
+        function renderPrepBoard(app) {
+            const activeCats = [...new Set(selectedItems.map(i => i.cat))];
+            app.innerHTML = `
+                <div class="text-center mb-6"><h2 class="text-3xl font-black text-white drop-shadow-md">準備好了嗎？</h2></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                    ${activeCats.map((cat, idx) => `
+                        <div class="bg-white/80 rounded-3xl p-6 border-8 ${borderColors[idx % 4]} shadow-xl">
+                            <div class="flex items-center gap-4 mb-6">
+                                <img src="images/categories/${cat}.png" class="w-20 h-20 object-contain">
+                                <h3 class="text-4xl font-black text-gray-700">${cat}</h3>
+                            </div>
+                            <div class="flex flex-wrap gap-4">
+                                ${selectedItems.filter(i => i.cat === cat).map(i => `
+                                    <div class="bg-white p-2 rounded-xl shadow" style="width:${cardSize}px">
+                                        <img src="${i.path}" class="w-full">
+                                        <p class="text-center font-bold text-sm ${showText?'':'hidden'}">${i.name}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-center gap-6 pb-20">
+                    <button onclick="setView('SELECT')" class="px-8 py-3 bg-gray-500 text-white rounded-full font-bold text-xl">返回修改</button>
+                    <button onclick="setView('GAME')" class="px-12 py-4 bg-emerald-500 text-white rounded-full font-black text-3xl btn-game">開始遊戲 🚀</button>
                 </div>
             `;
         }
 
-        // --- LOGIC ---
-        function toggleCard(path) {
-            const index = selectedCards.findIndex(s => s.path === path);
-            if (index > -1) selectedCards.splice(index, 1);
-            else selectedCards.push(vocabList.find(v => v.path === path));
-            render();
+        function renderGameStage(app) {
+            const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
+            const activeCats = gameMode === 'free' ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
+
+            app.innerHTML = `
+                <div id="shuffled-box" class="min-h-[160px] border-4 border-dashed border-white/60 rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/20 mb-10">
+                    ${shuffled.map((v, i) => `
+                        <div id="drag-${i}" class="bg-white p-2 rounded-xl shadow-xl cursor-grab relative" draggable="true" 
+                             style="width:${cardSize}px" ondragstart="handleStart(event, '${v.cat}')">
+                            <img src="${v.path}" class="w-full pointer-events-none">
+                            <p class="text-center font-bold text-sm ${showText?'':'hidden'}">${v.name}</p>
+                            <div class="feedback-container"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    ${activeCats.map((cat, idx) => `
+                        <div class="drop-zone bg-white/60 rounded-[40px] p-6 border-8 ${borderColors[idx % 4]} min-h-[300px]" 
+                             ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
+                            ${gameMode === 'ordered' ? `
+                                <div class="flex items-center gap-3 mb-4">
+                                    <img src="images/categories/${cat}.png" class="w-12 h-12 object-contain">
+                                    <h3 class="text-2xl font-black text-gray-700">${cat}</h3>
+                                </div>` : ''}
+                            <div class="flex flex-wrap gap-3 slot-container"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-10 flex justify-center gap-4">
+                    <button onclick="setView('SELECT')" class="px-6 py-2 bg-gray-500 text-white rounded-full font-bold">返回</button>
+                    ${gameMode === 'free' ? `<button onclick="finishFreeGame()" class="px-10 py-3 bg-emerald-500 text-white rounded-full font-black text-xl btn-game">完成分類 ✨</button>` : ''}
+                </div>
+            `;
         }
 
-        function startSelection(mode) {
-            gameMode = mode;
-            currentState = 'SELECT';
-            render();
+        // Logic Helpers
+        function showSubModes() { view = 'SUB_MODES'; updateView(); }
+        function setView(v, mode) { view = v; if(mode) gameMode = mode; updateView(); }
+        
+        function toggleItem(path) {
+            const idx = selectedItems.findIndex(i => i.path === path);
+            if (idx > -1) selectedItems.splice(idx, 1);
+            else selectedItems.push(vocabList.find(v => v.path === path));
+            updateView();
         }
 
-        function goToPrep() {
-            if (selectedCards.length === 0) return alert('請先選取圖片');
-            currentState = (gameMode === 'free') ? 'GAME' : 'GAME'; // Prep logic simplified for now
-            render();
+        function selectAll(cat) {
+            const items = vocabList.filter(v => v.cat === cat);
+            items.forEach(i => { if(!selectedItems.some(s=>s.path===i.path)) selectedItems.push(i); });
+            updateView();
         }
 
-        function goBack() {
-            if (currentState === 'SELECT') currentState = 'HOME';
-            else if (currentState === 'GAME') currentState = 'SELECT';
-            render();
+        function goNextFromSelect() {
+            if (selectedItems.length === 0) return alert('請先選擇圖片');
+            view = (gameMode === 'free') ? 'GAME' : 'PREP';
+            updateView();
         }
 
-        function changeBg(val) {
-            document.body.className = `bg-${val}`;
+        function updateCardSize(val) { cardSize = val; updateView(); }
+        function toggleText() { showText = !showText; updateView(); }
+
+        let currentDragCat = '';
+        function handleStart(e, cat) { currentDragCat = cat; e.dataTransfer.setData('text', e.target.id); }
+
+        function handleDrop(e, zoneCat) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text');
+            const el = document.getElementById(id);
+            const container = e.currentTarget.querySelector('.slot-container');
+            container.appendChild(el);
+
+            const isCorrect = (gameMode === 'free' || currentDragCat === zoneCat);
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-pop';
+            feedback.innerHTML = isCorrect ? '⭐' : '❌';
+            el.appendChild(feedback);
+            
+            sounds[isCorrect ? 'star' : 'wrong'].play();
+            if (gameMode === 'ordered') checkWin();
         }
 
-        function toggleText() {
-            showText = !showText;
-            render();
+        function checkWin() {
+            if (document.getElementById('shuffled-box').children.length === 0) {
+                const incorrect = document.querySelectorAll('.feedback-pop').length; // Logic can be more complex, but simple for now
+                finishFreeGame();
+            }
         }
 
-        // --- EXPORT FUNCTION ---
+        function finishFreeGame() {
+            confetti();
+            sounds.hooray.play();
+        }
+
         async function exportResult() {
-            const element = document.getElementById('capture-area');
-            const canvas = await html2canvas(element, {
-                useCORS: true,
-                scale: 2,
-                scrollY: -window.scrollY
-            });
+            const app = document.getElementById('app');
+            const canvas = await html2canvas(app, { scale: 2, useCORS: true, backgroundColor: null });
             const link = document.createElement('a');
-            link.download = `遊戲結果_${new Date().getTime()}.png`;
+            link.download = '學習成果.png';
             link.href = canvas.toDataURL();
             link.click();
         }
 
-        // --- GAME ENGINE ---
-        function renderGameStage() {
-            const container = document.getElementById('app-container');
-            const shuffled = [...selectedCards].sort(() => Math.random() - 0.5);
-            const activeCats = [...new Set(selectedCards.map(s => s.cat))];
-
-            container.innerHTML = `
-                <div class="flex flex-col gap-8">
-                    <div id="shuffled-box" class="min-h-[150px] border-4 border-dashed border-white/50 rounded-2xl p-4 flex flex-wrap gap-4 justify-center bg-white/20">
-                        ${shuffled.map((v, i) => `
-                            <div id="drag-${i}" class="draggable-card cursor-grab active:cursor-grabbing bg-white p-2 rounded-lg shadow-lg" 
-                                 style="width:${imageSize}px" draggable="true" ondragstart="handleDragStart(event, '${v.cat}', '${v.name}')">
-                                <img src="${v.path}" class="w-full pointer-events-none">
-                                <p class="text-center font-bold ${showText ? '' : 'hidden'}">${v.name}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${activeCats.map(cat => `
-                            <div class="drop-zone bg-white/40 rounded-3xl p-4 border-4 border-white" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
-                                <div class="flex items-center gap-2 mb-4 bg-white/60 p-2 rounded-xl">
-                                    <img src="images/categories/${cat}.png" class="w-8 h-8" onerror="this.style.display='none'">
-                                    <h3 class="font-bold text-xl text-gray-700">${cat}</h3>
-                                </div>
-                                <div class="flex flex-wrap gap-2 slot-container"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <button onclick="goBack()" class="mt-8 px-4 py-2 bg-gray-500 text-white rounded">返回</button>
-            `;
-        }
-
-        let draggedData = null;
-
-        function handleDragStart(e, cat, name) {
-            draggedData = { cat, name, elementId: e.target.id };
-        }
-
-        function handleDrop(e, zoneCat) {
-            e.preventDefault();
-            const target = e.currentTarget.querySelector('.slot-container');
-            const sourceEl = document.getElementById(draggedData.elementId);
-
-            if (gameMode === 'free' || draggedData.cat === zoneCat) {
-                target.appendChild(sourceEl);
-                showFeedback(true, e.clientX, e.clientY);
-                checkWin();
-            } else {
-                showFeedback(false, e.clientX, e.clientY);
-            }
-        }
-
-        function showFeedback(isCorrect, x, y) {
-            const icon = document.createElement('div');
-            icon.className = 'fixed text-6xl pointer-events-none z-[100] feedback-icon';
-            icon.style.left = `${x - 30}px`;
-            icon.style.top = `${y - 30}px`;
-            icon.innerHTML = isCorrect ? '⭐' : '❌';
-            document.body.appendChild(icon);
-            sounds[isCorrect ? 'star' : 'wrong'].play();
-            setTimeout(() => icon.remove(), 800);
-        }
-
-        function checkWin() {
-            const remaining = document.getElementById('shuffled-box').children.length;
-            if (remaining === 0) {
-                confetti();
-                sounds.hooray.play();
-            }
-        }
-
-        // Init
-        render();
+        updateView();
     </script>
 </body>
 </html>

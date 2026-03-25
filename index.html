@@ -8,49 +8,78 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Safe cross-device fonts for Chinese */
+        :root {
+            --card-width: 110px;
+            --card-font-size: 1.1rem;
+        }
+
         body { 
             font-family: "PingFang HK", "Heiti TC", "Microsoft JhengHei", sans-serif;
             overflow-x: hidden;
             user-select: none;
+            transition: background 0.3s;
         }
         
-        /* Background classes */
+        /* Backgrounds */
         .bg-park { background: url('images/park.jpg') center/cover fixed; }
         .bg-room { background: url('images/room.jpg') center/cover fixed; }
         .bg-road { background: url('images/road.jpg') center/cover fixed; }
         .bg-game { background: url('images/game.jpg') center/cover fixed; }
         .bg-white { background-color: #ffffff; }
 
-        .card-container { transition: all 0.2s ease; }
-        .selected-card { border-color: #22c55e !important; border-width: 6px !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
-        
-        .drop-zone { min-height: 250px; transition: background 0.3s; }
-        .feedback-pop {
-            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
-            font-size: 3rem; animation: popUp 0.8s ease-out forwards; pointer-events: none;
+        /* Card Styling */
+        .vocab-card {
+            width: var(--card-width);
+            transition: transform 0.1s;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        @keyframes popUp {
-            0% { transform: translate(-50%, 20px) scale(0); opacity: 0; }
-            50% { transform: translate(-50%, -20px) scale(1.5); opacity: 1; }
-            100% { transform: translate(-50%, -40px) scale(1); opacity: 0; }
+        .vocab-card p {
+            font-size: var(--card-font-size);
+            font-weight: 400; /* Not bold */
+            text-align: center;
+            margin-top: 4px;
+            word-break: break-all;
         }
 
-        /* Game-like Buttons */
-        .btn-game {
-            box-shadow: 0 6px 0 #b45309; transition: all 0.1s;
+        .selected-card { 
+            border: 6px solid #22c55e !important; 
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
         }
-        .btn-game:active { transform: translateY(4px); box-shadow: 0 2px 0 #b45309; }
+
+        .drop-zone { min-height: 280px; }
         
-        .cat-box-0 { border-color: #f472b6; } /* Pink */
-        .cat-box-1 { border-color: #60a5fa; } /* Blue */
-        .cat-box-2 { border-color: #4ad395; } /* Green */
-        .cat-box-3 { border-color: #fb923c; } /* Orange */
+        /* Box Colors */
+        .box-pink { border: 8px solid #FB6764; background-color: rgba(255, 255, 255, 0.9) !important; }
+        .box-blue { border: 8px solid #4BD8F8; background-color: rgba(255, 255, 255, 0.9) !important; }
+        .box-green { border: 8px solid #4ad395; background-color: rgba(255, 255, 255, 0.9) !important; }
+        .box-orange { border: 8px solid #fb923c; background-color: rgba(255, 255, 255, 0.9) !important; }
+
+        /* Emoji Animation */
+        .feedback-pop {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            font-size: 4rem; z-index: 50; pointer-events: none;
+            animation: popUp 0.8s ease-out forwards;
+        }
+        @keyframes popUp {
+            0% { transform: translate(-50%, 10px) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -30px) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50px) scale(1); opacity: 0; }
+        }
+
+        .btn-game {
+            box-shadow: 0 5px 0 #92400e; transition: all 0.1s;
+        }
+        .btn-game:active { transform: translateY(3px); box-shadow: 0 2px 0 #92400e; }
+        
+        .hidden-text p { display: none; }
     </style>
 </head>
 <body class="bg-park">
 
-    <nav class="fixed top-0 left-0 w-full h-12 bg-white/95 shadow-md z-50 flex items-center justify-between px-4">
+    <nav class="fixed top-0 left-0 w-full h-12 bg-white/95 shadow-md z-[100] flex items-center justify-between px-4">
         <div class="flex gap-2">
             <button onclick="showSubModes()" class="px-4 py-1 bg-sky-500 text-white rounded-full font-bold hover:bg-sky-600 shadow-sm">分類遊戲</button>
             <button class="px-4 py-1 bg-orange-500 text-white rounded-full font-bold opacity-50 cursor-not-allowed">擴展性命名</button>
@@ -59,11 +88,11 @@
 
         <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
             <div class="flex items-center gap-2">
-                <span>大小</span>
-                <input type="range" id="sizeSlider" min="80" max="180" value="110" oninput="updateCardSize(this.value)">
+                <span>圖片大小</span>
+                <input type="range" id="sizeSlider" min="80" max="220" value="110" oninput="handleSizeChange(this.value)">
             </div>
             <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" id="showTextToggle" checked onchange="toggleText()"> 文字
+                <input type="checkbox" id="showTextToggle" checked onchange="handleTextToggle(this.checked)"> 顯示文字
             </label>
             <select onchange="document.body.className = 'bg-' + this.value" class="border rounded-md px-2 py-1 bg-gray-50">
                 <option value="park">草地</option>
@@ -80,7 +109,7 @@
         </main>
 
     <script>
-        // Data Structure
+        // Use your full bulkVocabData here
         const bulkVocabData = `
 水果 哈密瓜 水果/哈密瓜.png
 水果 士多啤梨 水果/士多啤梨.png
@@ -90,106 +119,112 @@
 蔬菜 白菜 蔬菜/白菜.png
 動物 狗 動物/狗.png
 動物 貓 動物/貓.png
-`; // Paste full data here
+`; 
 
         const vocabList = bulkVocabData.trim().split('\n').map(line => {
             const [cat, name, path] = line.trim().split(/\s+/);
-            return { cat, name, path: `images/${path}` };
+            return { cat, name, path: `images/${path}`, id: 'id-' + Math.random().toString(36).substr(2, 9) };
         });
 
         const categories = [...new Set(vocabList.map(item => item.cat))];
-        const borderColors = ['border-pink-400', 'border-blue-400', 'border-green-400', 'border-orange-400'];
+        const boxStyles = ['box-pink', 'box-blue', 'box-green', 'box-orange'];
 
         // State
         let view = 'WELCOME';
-        let gameMode = ''; // 'ordered' or 'free'
+        let gameMode = ''; 
         let selectedItems = [];
-        let cardSize = 110;
-        let showText = true;
-
         const sounds = {
             star: new Audio('sounds/star.mp3'),
             wrong: new Audio('sounds/wrong.mp3'),
             hooray: new Audio('sounds/hooray.mp3')
         };
 
+        function setView(v, mode) {
+            view = v;
+            if(mode) gameMode = mode;
+            updateView();
+        }
+
+        function showSubModes() { view = 'SUB_MODES'; updateView(); }
+
         function updateView() {
             const app = document.getElementById('app');
             app.innerHTML = '';
+            const textClass = document.getElementById('showTextToggle').checked ? '' : 'hidden-text';
 
             if (view === 'WELCOME') {
-                app.innerHTML = `<div class="flex h-[70vh] items-center justify-center text-4xl font-extrabold text-sky-900 drop-shadow-sm">請選擇活動開始</div>`;
+                app.innerHTML = `<div class="flex h-[70vh] items-center justify-center text-4xl font-normal text-sky-900">請選擇活動開始</div>`;
             } 
             else if (view === 'SUB_MODES') {
                 app.innerHTML = `
                 <div class="flex flex-col items-center justify-center gap-12 py-20">
                     <div class="flex gap-10">
-                        <button onclick="setView('SELECT', 'ordered')" class="w-64 h-32 bg-sky-500 text-white text-3xl font-bold rounded-3xl border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 shadow-2xl">按類別分類</button>
-                        <button onclick="setView('SELECT', 'free')" class="w-64 h-32 bg-orange-500 text-white text-3xl font-bold rounded-3xl border-b-8 border-orange-700 active:translate-y-1 active:border-b-0 shadow-2xl">自由分類</button>
+                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-36 bg-sky-500 text-white text-3xl font-bold rounded-[2rem] border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 shadow-2xl">按類別分類</button>
+                        <button onclick="setView('SELECT', 'free')" class="w-72 h-36 bg-orange-500 text-white text-3xl font-bold rounded-[2rem] border-b-8 border-orange-700 active:translate-y-1 active:border-b-0 shadow-2xl">自由分類</button>
                     </div>
                 </div>`;
             }
             else if (view === 'SELECT') {
-                renderSelection(app);
+                renderSelection(app, textClass);
             }
             else if (view === 'PREP') {
-                renderPrepBoard(app);
+                renderPrepBoard(app, textClass);
             }
             else if (view === 'GAME') {
-                renderGameStage(app);
+                renderGameStage(app, textClass);
             }
         }
 
-        function renderSelection(app) {
+        function renderSelection(app, textClass) {
             let html = `
-                <div class="sticky top-12 z-40 bg-white/90 p-4 rounded-xl mb-6 shadow-md flex justify-between items-center border-4 border-sky-200">
+                <div class="sticky top-12 z-40 bg-white/95 p-4 rounded-xl mb-6 shadow-md flex justify-between items-center border-4 border-sky-300">
                     <div class="flex gap-4">
-                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border-2 border-sky-300 rounded-lg font-bold">
+                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border-2 border-sky-200 rounded-lg">
                             <option>快速跳至...</option>
                             ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>
-                        <input type="text" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-sky-300 rounded-lg font-bold" oninput="filterCards(this.value)">
+                        <input type="text" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-sky-200 rounded-lg" oninput="filterCards(this.value)">
                     </div>
-                    <button onclick="goNextFromSelect()" class="px-8 py-3 bg-orange-500 text-white rounded-full font-black text-xl btn-game">下一步：已選取 ${selectedItems.length} 張 🚀</button>
+                    <button onclick="goNextFromSelect()" class="px-8 py-3 bg-orange-500 text-white rounded-full font-black text-xl btn-game">下一步：已選取 ${selectedItems.length} 張</button>
                 </div>
+                <div id="selection-grid" class="${textClass}">
             `;
 
             categories.forEach(cat => {
                 html += `
                 <div id="section-${cat}" class="mb-10">
-                    <div class="bg-orange-500 text-white px-6 py-2 rounded-t-2xl flex justify-between items-center shadow-sm">
+                    <div class="bg-orange-500 text-white px-6 py-2 rounded-t-2xl flex justify-between items-center">
                         <span class="text-xl font-bold">${cat}</span>
-                        <button onclick="selectAll('${cat}')" class="bg-white/20 hover:bg-white/40 px-4 py-1 rounded-full text-sm font-bold">全選此類</button>
+                        <button class="bg-white/20 px-4 py-1 rounded-full text-sm">全選此類</button>
                     </div>
-                    <div class="bg-white/40 p-4 rounded-b-2xl grid grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2">
+                    <div class="bg-white/40 p-4 rounded-b-2xl flex flex-wrap gap-4 items-start">
                         ${vocabList.filter(v => v.cat === cat).map(v => `
-                            <div onclick="toggleItem('${v.path}')" class="cursor-pointer bg-white p-1 rounded-xl border-4 transition-all ${selectedItems.some(i=>i.path===v.path)?'selected-card':'border-transparent'}" style="width: ${cardSize}px">
-                                <img src="${v.path}" class="w-full aspect-square object-contain">
-                                <p class="text-center text-xs font-bold mt-1 ${showText?'':'hidden'}">${v.name}</p>
+                            <div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer bg-white p-2 rounded-xl border-4 transition-all ${selectedItems.some(i=>i.id===v.id)?'selected-card':'border-transparent'}">
+                                <img src="${v.path}" class="w-full aspect-square object-contain pointer-events-none">
+                                <p>${v.name}</p>
                             </div>
                         `).join('')}
                     </div>
                 </div>`;
             });
-            app.innerHTML = html + `<button onclick="setView('SUB_MODES')" class="mb-10 px-6 py-2 bg-gray-500 text-white rounded-full font-bold">返回</button>`;
+            app.innerHTML = html + `</div><button onclick="setView('SUB_MODES')" class="mb-10 px-6 py-2 bg-gray-500 text-white rounded-full">返回</button>`;
         }
 
-        function renderPrepBoard(app) {
+        function renderPrepBoard(app, textClass) {
             const activeCats = [...new Set(selectedItems.map(i => i.cat))];
             app.innerHTML = `
-                <div class="text-center mb-6"><h2 class="text-3xl font-black text-white drop-shadow-md">準備好了嗎？</h2></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 ${textClass}">
                     ${activeCats.map((cat, idx) => `
-                        <div class="bg-white/80 rounded-3xl p-6 border-8 ${borderColors[idx % 4]} shadow-xl">
-                            <div class="flex items-center gap-4 mb-6">
-                                <img src="images/categories/${cat}.png" class="w-20 h-20 object-contain">
+                        <div class="rounded-3xl p-6 ${boxStyles[idx % 2]} shadow-xl">
+                            <div class="flex items-center gap-6 mb-6">
+                                <img src="images/categories/${cat}.png" class="w-24 h-24 object-contain">
                                 <h3 class="text-4xl font-black text-gray-700">${cat}</h3>
                             </div>
                             <div class="flex flex-wrap gap-4">
                                 ${selectedItems.filter(i => i.cat === cat).map(i => `
-                                    <div class="bg-white p-2 rounded-xl shadow" style="width:${cardSize}px">
+                                    <div class="vocab-card bg-white p-2 rounded-xl shadow">
                                         <img src="${i.path}" class="w-full">
-                                        <p class="text-center font-bold text-sm ${showText?'':'hidden'}">${i.name}</p>
+                                        <p>${i.name}</p>
                                     </div>
                                 `).join('')}
                             </div>
@@ -197,82 +232,78 @@
                     `).join('')}
                 </div>
                 <div class="flex justify-center gap-6 pb-20">
-                    <button onclick="setView('SELECT')" class="px-8 py-3 bg-gray-500 text-white rounded-full font-bold text-xl">返回修改</button>
-                    <button onclick="setView('GAME')" class="px-12 py-4 bg-emerald-500 text-white rounded-full font-black text-3xl btn-game">開始遊戲 🚀</button>
+                    <button onclick="setView('GAME')" class="px-16 py-5 bg-orange-500 text-white rounded-full font-black text-4xl btn-game shadow-2xl">開始遊戲 🚀</button>
                 </div>
             `;
         }
 
-        function renderGameStage(app) {
+        function renderGameStage(app, textClass) {
             const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
-            const activeCats = gameMode === 'free' ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
+            const zones = gameMode === 'free' ? ['A', 'B'] : [...new Set(selectedItems.map(i => i.cat))];
 
             app.innerHTML = `
-                <div id="shuffled-box" class="min-h-[160px] border-4 border-dashed border-white/60 rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/20 mb-10">
+                <div id="shuffled-box" class="min-h-[180px] border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/90 mb-10 ${textClass}">
                     ${shuffled.map((v, i) => `
-                        <div id="drag-${i}" class="bg-white p-2 rounded-xl shadow-xl cursor-grab relative" draggable="true" 
-                             style="width:${cardSize}px" ondragstart="handleStart(event, '${v.cat}')">
+                        <div id="${v.id}" class="vocab-card bg-white p-2 rounded-xl shadow-xl cursor-grab relative z-10" 
+                             draggable="true" ondragstart="handleStart(event, '${v.cat}')">
                             <img src="${v.path}" class="w-full pointer-events-none">
-                            <p class="text-center font-bold text-sm ${showText?'':'hidden'}">${v.name}</p>
-                            <div class="feedback-container"></div>
+                            <p>${v.name}</p>
                         </div>
                     `).join('')}
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    ${activeCats.map((cat, idx) => `
-                        <div class="drop-zone bg-white/60 rounded-[40px] p-6 border-8 ${borderColors[idx % 4]} min-h-[300px]" 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 ${textClass}">
+                    ${zones.map((cat, idx) => `
+                        <div class="drop-zone rounded-[40px] p-6 ${boxStyles[idx % 2]} shadow-inner" 
                              ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
                             ${gameMode === 'ordered' ? `
-                                <div class="flex items-center gap-3 mb-4">
-                                    <img src="images/categories/${cat}.png" class="w-12 h-12 object-contain">
-                                    <h3 class="text-2xl font-black text-gray-700">${cat}</h3>
+                                <div class="flex items-center gap-4 mb-4">
+                                    <img src="images/categories/${cat}.png" class="w-16 h-16 object-contain">
+                                    <h3 class="text-3xl font-black text-gray-700">${cat}</h3>
                                 </div>` : ''}
-                            <div class="flex flex-wrap gap-3 slot-container"></div>
+                            <div class="flex flex-wrap gap-4 slot-container"></div>
                         </div>
                     `).join('')}
                 </div>
                 <div class="mt-10 flex justify-center gap-4">
-                    <button onclick="setView('SELECT')" class="px-6 py-2 bg-gray-500 text-white rounded-full font-bold">返回</button>
-                    ${gameMode === 'free' ? `<button onclick="finishFreeGame()" class="px-10 py-3 bg-emerald-500 text-white rounded-full font-black text-xl btn-game">完成分類 ✨</button>` : ''}
+                    <button onclick="setView('SELECT')" class="px-6 py-2 bg-gray-500 text-white rounded-full">返回</button>
+                    ${gameMode === 'free' ? `<button onclick="finishGame()" class="px-10 py-3 bg-emerald-500 text-white rounded-full font-black text-xl btn-game">完成分類 ✨</button>` : ''}
                 </div>
             `;
         }
 
-        // Logic Helpers
-        function showSubModes() { view = 'SUB_MODES'; updateView(); }
-        function setView(v, mode) { view = v; if(mode) gameMode = mode; updateView(); }
-        
-        function toggleItem(path) {
-            const idx = selectedItems.findIndex(i => i.path === path);
-            if (idx > -1) selectedItems.splice(idx, 1);
-            else selectedItems.push(vocabList.find(v => v.path === path));
-            updateView();
+        // --- Persistent Controls Logic ---
+        function handleSizeChange(val) {
+            document.documentElement.style.setProperty('--card-width', val + 'px');
+            document.documentElement.style.setProperty('--card-font-size', (val/100) + 'rem');
         }
 
-        function selectAll(cat) {
-            const items = vocabList.filter(v => v.cat === cat);
-            items.forEach(i => { if(!selectedItems.some(s=>s.path===i.path)) selectedItems.push(i); });
-            updateView();
+        function handleTextToggle(isVisible) {
+            const containers = ['selection-grid', 'shuffled-box', 'app'];
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) isVisible ? el.classList.remove('hidden-text') : el.classList.add('hidden-text');
+            });
         }
 
-        function goNextFromSelect() {
-            if (selectedItems.length === 0) return alert('請先選擇圖片');
-            view = (gameMode === 'free') ? 'GAME' : 'PREP';
-            updateView();
-        }
-
-        function updateCardSize(val) { cardSize = val; updateView(); }
-        function toggleText() { showText = !showText; updateView(); }
-
+        // --- Drag & Drop ---
         let currentDragCat = '';
-        function handleStart(e, cat) { currentDragCat = cat; e.dataTransfer.setData('text', e.target.id); }
+        function handleStart(e, cat) { 
+            currentDragCat = cat; 
+            e.dataTransfer.setData('text', e.target.id); 
+        }
 
         function handleDrop(e, zoneCat) {
             e.preventDefault();
             const id = e.dataTransfer.getData('text');
             const el = document.getElementById(id);
             const container = e.currentTarget.querySelector('.slot-container');
+            if(!container || !el) return;
+
             container.appendChild(el);
+
+            // Emoji Logic
+            const existing = el.querySelector('.feedback-pop');
+            if(existing) existing.remove();
 
             const isCorrect = (gameMode === 'free' || currentDragCat === zoneCat);
             const feedback = document.createElement('div');
@@ -280,19 +311,28 @@
             feedback.innerHTML = isCorrect ? '⭐' : '❌';
             el.appendChild(feedback);
             
+            sounds[isCorrect ? 'star' : 'wrong'].currentTime = 0;
             sounds[isCorrect ? 'star' : 'wrong'].play();
-            if (gameMode === 'ordered') checkWin();
-        }
-
-        function checkWin() {
-            if (document.getElementById('shuffled-box').children.length === 0) {
-                const incorrect = document.querySelectorAll('.feedback-pop').length; // Logic can be more complex, but simple for now
-                finishFreeGame();
+            
+            if (gameMode === 'ordered' && document.getElementById('shuffled-box').children.length === 0) {
+                finishGame();
             }
         }
 
-        function finishFreeGame() {
-            confetti();
+        function toggleItem(id) {
+            const idx = selectedItems.findIndex(i => i.id === id);
+            if (idx > -1) selectedItems.splice(idx, 1);
+            else selectedItems.push(vocabList.find(v => v.id === id));
+            updateView();
+        }
+
+        function goNextFromSelect() {
+            if (selectedItems.length === 0) return alert('請先選擇圖片');
+            setView(gameMode === 'free' ? 'GAME' : 'PREP');
+        }
+
+        function finishGame() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             sounds.hooray.play();
         }
 
@@ -300,7 +340,7 @@
             const app = document.getElementById('app');
             const canvas = await html2canvas(app, { scale: 2, useCORS: true, backgroundColor: null });
             const link = document.createElement('a');
-            link.download = '學習成果.png';
+            link.download = '分類結果.png';
             link.href = canvas.toDataURL();
             link.click();
         }

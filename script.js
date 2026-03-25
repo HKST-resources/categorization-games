@@ -1,5 +1,6 @@
-// 1. 資料庫 (請根據需要調整路徑)
-const rawDataString = `水果	哈密瓜	水果/哈密瓜.png
+// 1. 資料庫 (請在此貼入你完整的資料內容)
+const rawDataString = `
+水果	哈密瓜	水果/哈密瓜.png
 水果	士多啤梨	水果/士多啤梨.png
 水果	奇異果	水果/奇異果.png
 水果	提子	水果/提子.png
@@ -257,8 +258,8 @@ const rawDataString = `水果	哈密瓜	水果/哈密瓜.png
 數字	9	數字/9.png
 數字	10	數字/10.png`;
 
-// 2. 解析資料與全域變數
-const library = rawDataString.trim().split('\n').map(line => {
+// 2. 全域變數
+const library = rawDataString.trim().split('\n').slice(1).map(line => {
     const [cat, name, path] = line.split('\t');
     return { cat: cat.trim(), name: name.trim(), path: `images/${path}` };
 });
@@ -270,7 +271,7 @@ let gameMode = '';
 
 const getCatColor = (index) => colorPalette[index % colorPalette.length];
 
-// 3. 音效處理 (防止重複播放)
+// 3. 音效處理
 const soundPool = {
     star: new Audio('sounds/star.mp3'),
     wrong: new Audio('sounds/wrong.mp3'),
@@ -280,52 +281,68 @@ function playSound(type) {
     const s = soundPool[type];
     if(!s) return;
     s.pause(); s.currentTime = 0;
-    s.play().catch(()=>{});
+    s.play().catch(e => console.log("音效播放失敗:", e));
 }
 
-// 4. 核心：網頁載入後的按鈕綁定
-window.onload = function() {
+// 4. 核心：綁定所有頂部列事件
+function initTopBar() {
     const nextBtn = document.getElementById('global-next-btn');
     const navBtnSort = document.getElementById('nav-btn-sort');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const textToggle = document.getElementById('textToggle');
+    const bgSelect = document.getElementById('bgSelect');
 
-    // 點擊頂部「分類遊戲」按鈕
-    navBtnSort.onclick = () => {
-        nextBtn.classList.add('hidden');
-        const main = document.getElementById('main-stage');
-        // 渲染模式選擇畫面
-        main.innerHTML = `
-            <div class="welcome-container" style="gap:40px;">
-                <button class="pill-btn btn-orange" style="width:280px; height:130px; font-size:32px; border-radius:25px;" id="mode-cat">按類別分類</button>
-                <button class="pill-btn btn-pink" style="width:280px; height:130px; font-size:32px; border-radius:25px;" id="mode-free">自由分類</button>
-            </div>`;
-        
-        // 綁定內層按鈕
-        document.getElementById('mode-cat').onclick = () => enterSelection('by-category');
-        document.getElementById('mode-free').onclick = () => enterSelection('free');
-    };
+    // 分類遊戲按鈕
+    if (navBtnSort) {
+        navBtnSort.onclick = () => {
+            nextBtn.classList.add('hidden');
+            const main = document.getElementById('main-stage');
+            main.innerHTML = `
+                <div class="welcome-container" style="gap:40px;">
+                    <button class="pill-btn btn-orange" style="width:280px; height:130px; font-size:32px; border-radius:25px;" id="mode-cat">按類別分類</button>
+                    <button class="pill-btn btn-pink" style="width:280px; height:130px; font-size:32px; border-radius:25px;" id="mode-free">自由分類</button>
+                </div>`;
+            
+            document.getElementById('mode-cat').onclick = () => enterSelection('by-category');
+            document.getElementById('mode-free').onclick = () => enterSelection('free');
+        };
+    }
 
-    // 控制項邏輯
-    document.getElementById('sizeSlider').oninput = (e) => {
-        document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
-    };
-    document.getElementById('textToggle').onchange = (e) => {
-        document.body.classList.toggle('no-text', !e.target.checked);
-    };
-    document.getElementById('bgSelect').onchange = (e) => {
-        const val = e.target.value;
-        document.body.style.background = val === 'white' ? 'white' : `url('images/${val}') center/cover fixed`;
-    };
+    // 背景選擇器修復
+    if (bgSelect) {
+        bgSelect.onchange = (e) => {
+            const val = e.target.value;
+            if (val === 'white') {
+                document.body.style.background = 'white';
+            } else {
+                document.body.style.background = `url('images/${val}') center/cover fixed`;
+            }
+        };
+    }
+
+    // 尺寸與文字開關
+    if (sizeSlider) {
+        sizeSlider.oninput = (e) => {
+            document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
+        };
+    }
+    if (textToggle) {
+        textToggle.onchange = (e) => {
+            document.body.classList.toggle('no-text', !e.target.checked);
+        };
+    }
 
     nextBtn.onclick = () => {
         nextBtn.classList.add('hidden');
         if (gameMode === 'free') renderGameStage();
         else renderPrepBoard();
     };
-};
+}
 
-// 5. 遊戲邏輯函數 (enterSelection, renderCardHTML, renderPrepBoard, renderGameStage, initInteract, checkAllCorrect...)
-// 這裡接著放你之前擁有的那些函數邏輯即可
+// 啟動初始化
+window.onload = initTopBar;
 
+// 5. 頁面切換與邏輯函數
 function enterSelection(mode) {
     gameMode = mode;
     const stage = document.getElementById('main-stage');
@@ -361,7 +378,10 @@ function enterSelection(mode) {
     };
     document.getElementById('searchInput').oninput = (e) => {
         const q = e.target.value;
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.dataset.name.includes(q) ? 'block' : 'none');
+        document.querySelectorAll('.card').forEach(c => {
+            const isMatch = c.dataset.name.includes(q);
+            c.style.display = isMatch ? 'flex' : 'none';
+        });
     };
     updateNextButton();
 }
@@ -379,8 +399,13 @@ function renderCardHTML(item, isSelectable) {
 function toggleCard(el) {
     const item = { cat: el.dataset.cat, path: el.dataset.path, name: el.dataset.name };
     const idx = selectedItems.findIndex(s => s.path === item.path);
-    if (idx > -1) { selectedItems.splice(idx, 1); el.classList.remove('selected'); }
-    else { selectedItems.push(item); el.classList.add('selected'); }
+    if (idx > -1) { 
+        selectedItems.splice(idx, 1); 
+        el.classList.remove('selected'); 
+    } else { 
+        selectedItems.push(item); 
+        el.classList.add('selected'); 
+    }
     updateNextButton();
 }
 
@@ -392,8 +417,10 @@ function selectAllInCategory(cat) {
 
 function updateNextButton() {
     const nextBtn = document.getElementById('global-next-btn');
-    nextBtn.innerText = `下一步 (已選: ${selectedItems.length}) ➔`;
-    nextBtn.classList.toggle('hidden', selectedItems.length === 0);
+    if (nextBtn) {
+        nextBtn.innerText = `下一步 (已選: ${selectedItems.length}) ➔`;
+        nextBtn.classList.toggle('hidden', selectedItems.length === 0);
+    }
 }
 
 function renderPrepBoard() {
@@ -437,11 +464,11 @@ function renderGameStage() {
                 ${catsInGame.map((cat, idx) => `
                     <div class="category-box target-zone" data-target="${isFree ? 'any' : cat}" style="border-color:${getCatColor(idx)}">
                         ${!isFree ? `
-                        <div class="cat-header" style="background:${getCatColor(idx)}">
-                            <img src="images/categories/${cat}.png" onerror="this.style.display='none'">
+                        <div class="cat-header" style="background:${getCatColor(idx)}; height: 60px; font-size: 20px;">
+                            <img src="images/categories/${cat}.png" onerror="this.style.display='none'" style="height:40px; width:40px;">
                             ${cat}
                         </div>` : ''}
-                        <div class="inner-zone grid-layout"></div>
+                        <div class="inner-zone grid-layout" style="padding: 10px; gap: 10px;"></div>
                     </div>
                 `).join('')}
             </div>

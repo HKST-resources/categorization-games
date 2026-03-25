@@ -11,20 +11,17 @@
         :root { --card-width: 110px; --card-font-size: 1.1rem; }
         body { font-family: sans-serif; overflow-x: hidden; user-select: none; }
         
-        /* Backgrounds */
         .bg-park { background: url('images/park.jpg') center/cover fixed; }
         .bg-room { background: url('images/room.jpg') center/cover fixed; }
         .bg-road { background: url('images/road.jpg') center/cover fixed; }
         .bg-game { background: url('images/game.jpg') center/cover fixed; }
         .bg-white { background-color: #ffffff; }
 
-        /* Fixed Viewport Container for Game Stage */
-        .game-viewport { height: calc(100vh - 80px); display: flex; flex-direction: column; gap: 1rem; }
+        .game-viewport { height: calc(100vh - 70px); display: flex; flex-direction: column; gap: 1rem; }
 
-        /* Card Styles */
+        /* Consistent Card Style */
         .vocab-card {
             width: var(--card-width);
-            transition: transform 0.1s;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -33,15 +30,41 @@
             padding: 8px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
         }
         .vocab-card p { font-size: var(--card-font-size); font-weight: 400; text-align: center; margin-top: 4px; }
         .selected-card { border: 6px solid #22c55e !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
 
-        /* Category Box Colors */
-        .box-pink { border: 8px solid #FB6764; background: rgba(255, 255, 255, 0.9); }
-        .box-blue { border: 8px solid #4BD8F8; background: rgba(255, 255, 255, 0.9); }
-        .box-green { border: 8px solid #4ad395; background: rgba(255, 255, 255, 0.9); }
-        .box-orange { border: 8px solid #fb923c; background: rgba(255, 255, 255, 0.9); }
+        /* Rigid Category Boxes */
+        .category-column {
+            width: 260px;
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 24px;
+            border-width: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .box-pink { border-color: #FB6764; }
+        .box-blue { border-color: #4BD8F8; }
+        .box-green { border-color: #4ad395; }
+        .box-orange { border-color: #fb923c; }
+
+        /* 3D Button Shadows matching their colors */
+        .btn-blue { background-color: #3b82f6; border-bottom: 6px solid #1d4ed8; }
+        .btn-blue:active { transform: translateY(3px); border-bottom-width: 2px; }
+        
+        .btn-orange { background-color: #f97316; border-bottom: 6px solid #c2410c; }
+        .btn-orange:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-emerald { background-color: #10b981; border-bottom: 6px solid #047857; }
+        .btn-emerald:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-gray { background-color: #6b7280; border-bottom: 6px solid #374151; }
+        .btn-gray:active { transform: translateY(3px); border-bottom-width: 2px; }
 
         .feedback-pop {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
@@ -54,18 +77,16 @@
             100% { transform: translate(-50%, -50px) scale(1); opacity: 0; }
         }
 
-        .btn-game { box-shadow: 0 5px 0 #92400e; transition: all 0.1s; }
-        .btn-game:active { transform: translateY(3px); box-shadow: 0 2px 0 #92400e; }
         .hidden-text p { display: none; }
     </style>
 </head>
 <body class="bg-park">
 
-    <nav class="fixed top-0 left-0 w-full h-12 bg-white/95 shadow-md z-[100] flex items-center justify-between px-4">
+    <nav class="fixed top-0 left-0 w-full h-12 bg-white shadow-md z-[100] flex items-center justify-between px-4">
         <div class="flex gap-2">
-            <button onclick="showSubModes()" class="px-4 py-1 bg-sky-500 text-white rounded-full font-bold shadow-sm">分類遊戲</button>
-            <button class="px-4 py-1 bg-orange-500 text-white rounded-full font-bold opacity-50">擴展性命名</button>
-            <button class="px-4 py-1 bg-gray-400 text-white rounded-full font-bold opacity-50">快速命名</button>
+            <button onclick="showSubModes()" class="px-4 py-1 text-white rounded-full font-bold btn-blue">分類遊戲</button>
+            <button class="px-4 py-1 text-white rounded-full font-bold opacity-50 btn-orange">擴展性命名</button>
+            <button class="px-4 py-1 text-white rounded-full font-bold opacity-50 btn-gray">快速命名</button>
         </div>
 
         <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
@@ -100,7 +121,7 @@
 蔬菜 白菜 蔬菜/白菜.png
 動物 狗 動物/狗.png
 動物 貓 動物/貓.png
-`; // Paste full list here
+`; 
 
         const vocabList = bulkVocabData.trim().split('\n').map(line => {
             const [cat, name, path] = line.trim().split(/\s+/);
@@ -113,13 +134,14 @@
         let view = 'WELCOME';
         let gameMode = ''; 
         let selectedItems = [];
+        let searchTerm = '';
         const sounds = {
             star: new Audio('sounds/star.mp3'),
             wrong: new Audio('sounds/wrong.mp3'),
             hooray: new Audio('sounds/hooray.mp3')
         };
 
-        function setView(v, mode) { view = v; if(mode) gameMode = mode; updateView(); }
+        function setView(v, mode) { view = v; if(mode) gameMode = mode; searchTerm = ''; updateView(); }
         function showSubModes() { view = 'SUB_MODES'; updateView(); }
 
         function updateView() {
@@ -134,8 +156,8 @@
                 app.innerHTML = `
                 <div class="flex flex-col items-center justify-center gap-12 py-20">
                     <div class="flex gap-10">
-                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-36 bg-sky-500 text-white text-3xl font-bold rounded-[2rem] btn-game">按類別分類</button>
-                        <button onclick="setView('SELECT', 'free')" class="w-72 h-36 bg-orange-500 text-white text-3xl font-bold rounded-[2rem] btn-game">自由分類</button>
+                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-36 text-white text-3xl font-bold rounded-[2rem] btn-blue">按類別分類</button>
+                        <button onclick="setView('SELECT', 'free')" class="w-72 h-36 text-white text-3xl font-bold rounded-[2rem] btn-orange">自由分類</button>
                     </div>
                 </div>`;
             }
@@ -152,58 +174,78 @@
 
         function renderSelection(app, textClass) {
             let html = `
-                <div class="sticky top-0 z-40 bg-white/95 p-4 rounded-xl mb-4 shadow-md flex justify-between items-center border-4 border-sky-200">
+                <div class="sticky top-0 z-40 bg-white/95 p-5 rounded-2xl mb-4 shadow-md flex justify-between items-center border-4 border-sky-100">
                     <div class="flex gap-4">
-                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border rounded-lg font-bold">
+                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border rounded-xl font-bold">
                             <option>快速跳至...</option>
                             ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>
-                        <input type="text" placeholder="🔍 搜尋詞彙..." class="p-2 border rounded-lg" oninput="filterCards(this.value)">
+                        <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." value="${searchTerm}" class="p-2 border rounded-xl w-64" oninput="handleSearch(this.value)">
                     </div>
-                    <button onclick="goNextFromSelect()" class="px-8 py-3 bg-orange-500 text-white rounded-full font-black text-xl btn-game">下一步：已選取 ${selectedItems.length} 張</button>
+                    <button onclick="goNextFromSelect()" class="px-10 py-3 text-white rounded-full font-black text-xl btn-orange">下一步：已選取 ${selectedItems.length} 張</button>
                 </div>
-                <div id="selection-grid" class="${textClass} flex flex-col gap-6">
+                <div id="selection-grid" class="${textClass} flex flex-col gap-8">
             `;
-            categories.forEach(cat => {
+
+            if (searchTerm) {
+                const filtered = vocabList.filter(v => v.name.includes(searchTerm));
                 html += `
-                <div id="section-${cat}">
-                    <div class="bg-orange-500 text-white px-6 py-1 rounded-t-xl flex justify-between items-center">
-                        <span class="font-bold">${cat}</span>
-                        <button onclick="selectAllInCat('${cat}')" class="text-xs bg-white/20 px-3 py-1 rounded-full">全選</button>
+                    <div class="bg-white/40 p-6 rounded-2xl flex flex-wrap gap-4">
+                        ${filtered.map(v => renderCardItem(v)).join('')}
+                        ${filtered.length === 0 ? '<p class="text-xl p-10">找不到匹配的詞彙</p>' : ''}
                     </div>
-                    <div class="bg-white/40 p-3 rounded-b-xl flex flex-wrap gap-3 items-start">
-                        ${vocabList.filter(v => v.cat === cat).map(v => `
-                            <div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer border-4 ${selectedItems.some(i=>i.id===v.id)?'selected-card':'border-transparent'}">
-                                <img src="${v.path}" class="w-full aspect-square object-contain pointer-events-none">
-                                <p>${v.name}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>`;
-            });
-            app.innerHTML = html + `</div><button onclick="setView('SUB_MODES')" class="mt-6 mb-10 px-6 py-2 bg-gray-500 text-white rounded-full">返回</button>`;
+                `;
+            } else {
+                categories.forEach(cat => {
+                    html += `
+                    <div id="section-${cat}">
+                        <div class="bg-orange-500 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center shadow-sm">
+                            <span class="text-2xl font-bold tracking-wide">${cat}</span>
+                            <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 hover:bg-white/40 px-5 py-2 rounded-full font-bold">全選此類</button>
+                        </div>
+                        <div class="bg-white/40 p-5 rounded-b-2xl flex flex-wrap gap-3 items-start border-x-2 border-b-2 border-orange-100">
+                            ${vocabList.filter(v => v.cat === cat).map(v => renderCardItem(v)).join('')}
+                        </div>
+                    </div>`;
+                });
+            }
+            app.innerHTML = html + `</div><button onclick="setView('SUB_MODES')" class="mt-10 mb-20 px-10 py-3 text-white rounded-full font-bold btn-gray">返回</button>`;
+            if(searchTerm) document.getElementById('searchInput').focus();
+        }
+
+        function renderCardItem(v) {
+            const isSelected = selectedItems.some(i => i.id === v.id);
+            return `
+                <div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer border-4 ${isSelected ? 'selected-card' : 'border-transparent'}">
+                    <img src="${v.path}" class="w-full aspect-square object-contain pointer-events-none">
+                    <p>${v.name}</p>
+                </div>
+            `;
         }
 
         function renderPrepBoard(app, textClass) {
             const activeCats = [...new Set(selectedItems.map(i => i.cat))];
             app.innerHTML = `
-                <div class="flex flex-col items-center gap-6 ${textClass}">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl">
+                <div class="flex flex-col items-center gap-8 ${textClass}">
+                    <div class="flex flex-wrap justify-center gap-8 w-full">
                         ${activeCats.map((cat, idx) => `
-                            <div class="rounded-3xl p-6 ${boxStyles[idx] || 'box-orange'} shadow-xl">
-                                <div class="flex items-center gap-6 mb-4">
-                                    <img src="images/categories/${cat}.png" class="w-20 h-20 object-contain">
-                                    <h3 class="text-3xl font-black text-gray-700">${cat}</h3>
+                            <div class="rounded-3xl p-8 ${boxStyles[idx] || 'box-orange'} shadow-xl min-w-[300px] bg-white/90">
+                                <div class="flex items-center gap-6 mb-6">
+                                    <img src="images/categories/${cat}.png" class="w-24 h-24 object-contain">
+                                    <h3 class="text-4xl font-black text-gray-700">${cat}</h3>
                                 </div>
-                                <div class="flex flex-wrap gap-3">
+                                <div class="flex flex-wrap gap-4">
                                     ${selectedItems.filter(i => i.cat === cat).map(i => `
-                                        <div class="vocab-card shadow-sm"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>
+                                        <div class="vocab-card shadow-sm border border-gray-100"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>
                                     `).join('')}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
-                    <button onclick="setView('GAME')" class="px-16 py-5 bg-orange-500 text-white rounded-full font-black text-3xl btn-game mt-4">開始遊戲 🚀</button>
+                    <div class="flex gap-6 pb-20">
+                        <button onclick="setView('SELECT')" class="px-10 py-4 text-white rounded-full font-bold text-xl btn-gray text-white">返回修改</button>
+                        <button onclick="setView('GAME')" class="px-20 py-5 text-white rounded-full font-black text-4xl btn-orange">開始遊戲 🚀</button>
+                    </div>
                 </div>
             `;
         }
@@ -214,38 +256,42 @@
 
             app.innerHTML = `
                 <div class="game-viewport ${textClass}">
-                    <div id="shuffled-box" class="h-1/4 border-4 border-dashed border-white rounded-3xl p-4 flex flex-wrap gap-3 justify-center bg-white/90 overflow-y-auto">
+                    <div id="shuffled-box" class="h-1/3 border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/90 overflow-y-auto shadow-inner">
                         ${shuffled.map((v) => `
-                            <div id="${v.id}" data-cat="${v.cat}" class="vocab-card shadow-lg cursor-grab relative z-10" draggable="true" ondragstart="handleStart(event, '${v.cat}')">
+                            <div id="${v.id}" data-cat="${v.cat}" class="vocab-card shadow-xl cursor-grab relative z-10" draggable="true" ondragstart="handleStart(event, '${v.cat}')">
                                 <img src="${v.path}" class="w-full pointer-events-none">
                                 <p>${v.name}</p>
+                                <div class="feedback-container"></div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
+                    <div class="flex-1 flex gap-6 overflow-x-auto pb-4 px-2 justify-center items-end">
                         ${zones.map((cat, idx) => `
-                            <div class="drop-zone flex flex-col rounded-[32px] p-4 ${boxStyles[idx] || 'box-orange'} overflow-hidden" 
-                                 data-zone-cat="${cat}" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
-                                ${gameMode === 'ordered' ? `
-                                    <div class="flex items-center gap-3 mb-2 shrink-0">
-                                        <img src="images/categories/${cat}.png" class="w-10 h-10 object-contain">
-                                        <h3 class="text-xl font-black text-gray-700">${cat}</h3>
-                                    </div>` : ''}
-                                <div class="flex flex-wrap gap-3 slot-container overflow-y-auto h-full items-start content-start"></div>
+                            <div class="category-column ${boxStyles[idx] || 'box-orange'}" data-zone-cat="${cat}" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
+                                <div class="p-4 bg-white/50 rounded-t-xl shrink-0">
+                                    ${gameMode === 'ordered' ? `
+                                        <div class="flex flex-col items-center gap-2">
+                                            <img src="images/categories/${cat}.png" class="w-16 h-16 object-contain">
+                                            <h3 class="text-xl font-black text-gray-700 text-center">${cat}</h3>
+                                        </div>` : '<div class="h-12"></div>'}
+                                </div>
+                                <div class="flex-1 overflow-y-auto p-4 flex flex-wrap gap-3 content-start justify-center slot-container"></div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div class="h-12 flex justify-center items-center gap-4 shrink-0">
-                        <button onclick="setView('SELECT')" class="px-6 py-1 bg-gray-500 text-white rounded-full text-sm">返回</button>
-                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-8 py-2 bg-emerald-500 text-white rounded-full font-bold btn-game">完成分類 ✨</button>` : ''}
+                    <div class="h-16 flex justify-center items-center gap-6 shrink-0">
+                        <button onclick="setView('SELECT')" class="px-8 py-2 text-white rounded-full font-bold btn-gray">返回</button>
+                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-12 py-3 text-white rounded-full font-black text-xl btn-emerald">完成分類 ✨</button>` : ''}
                     </div>
                 </div>
             `;
         }
 
         // Logic
+        function handleSearch(val) { searchTerm = val; updateView(); }
+
         function handleSizeChange(val) {
             document.documentElement.style.setProperty('--card-width', val + 'px');
             document.documentElement.style.setProperty('--card-font-size', (val/100) + 'rem');
@@ -283,23 +329,17 @@
         }
 
         function checkWinConditions() {
-            const shuffledBox = document.getElementById('shuffled-box');
-            if (shuffledBox.children.length > 0) return; // Not finished dragging
-
+            if (document.getElementById('shuffled-box').children.length > 0) return;
             const cards = document.querySelectorAll('.slot-container .vocab-card');
             let allCorrect = true;
-
             cards.forEach(card => {
-                const cardCat = card.getAttribute('data-cat');
-                const zoneCat = card.closest('.drop-zone').getAttribute('data-zone-cat');
-                if (cardCat !== zoneCat) allCorrect = false;
+                if (card.getAttribute('data-cat') !== card.closest('.category-column').getAttribute('data-zone-cat')) allCorrect = false;
             });
-
             if (allCorrect) finishGame(false);
         }
 
         function finishGame(isFree) {
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            confetti({ particleCount: 200, spread: 80, origin: { y: 0.7 } });
             sounds.hooray.play();
         }
 
@@ -323,9 +363,9 @@
 
         async function exportResult() {
             const app = document.getElementById('app');
-            const canvas = await html2canvas(app, { scale: 2, useCORS: true, backgroundColor: null });
+            const canvas = await html2canvas(app, { scale: 2, useCORS: true });
             const link = document.createElement('a');
-            link.download = '分類結果.png';
+            link.download = '學習紀錄.png';
             link.href = canvas.toDataURL();
             link.click();
         }

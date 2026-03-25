@@ -1,41 +1,250 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙學習活動</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分類遊戲</title>
+<style>
+body { font-family: sans-serif; background:#FFF9C4; margin:0; }
+.topbar { padding:10px; background:#FFD93D; display:flex; justify-content:space-between; }
+.container { padding:10px; }
+.grid { display:flex; flex-wrap:wrap; gap:10px; }
+.card { width:80px; height:100px; background:#fff; border-radius:15px; box-shadow:0 5px #ccc; text-align:center; cursor:pointer; }
+.card img { width:60px; height:60px; }
+.selected { border:3px solid green; }
+.dropzone { flex:1; min-height:150px; background:#BBDEFB; margin:5px; padding:10px; border-radius:15px; }
+.hidden { display:none; }
+button { padding:10px 20px; border:none; border-radius:10px; background:#4CAF50; color:#fff; }
+</style>
 </head>
 <body>
-    <header class="top-bar">
-        <div class="nav-left">
-            <button class="pill-btn btn-orange" id="nav-btn-sort">分類遊戲</button>
-            <button class="pill-btn btn-blue">擴展性命名</button>
-            <button class="pill-btn btn-muted-green">快速命名</button>
-        </div>
-        <div class="nav-right">
-            <div class="control-item">大小 <input type="range" id="sizeSlider" min="100" max="220" value="130"></div>
-            <div class="control-item"><input type="checkbox" id="textToggle" checked> 文字</div>
-            <select id="bgSelect" class="pill-btn" style="background:#eee; color:#333; height:36px; padding:0 10px; box-shadow:none;">
-                <option value="park.jpg">公園</option>
-                <option value="room.jpg">房間</option>
-                <option value="road.jpg">馬路</option>
-                <option value="game.jpg">遊戲</option>
-                <option value="yellow.jpg">黃色</option>
-                <option value="stripe.jpg">條紋</option>
-                <option value="white">白色</option>
-            </select>
-            <button class="pill-btn btn-green">匯出 💾</button>
-        </div>
-    </header>
-    <main id="main-stage">
-        <div style="text-align:center; padding-top:20vh;">
-            <h1 style="color:white; font-size:48px; text-shadow:2px 2px 10px rgba(0,0,0,0.5);">請選擇活動開始</h1>
-        </div>
-    </main>
-    <button id="global-next-btn" class="pill-btn btn-orange floating-next hidden"></button>
-    <script src="script.js"></script>
+
+<div class="topbar">
+<div>分類遊戲 🎮</div>
+<div id="score">分數: 0</div>
+</div>
+
+<div class="container" id="selectPage">
+<input type="text" id="search" placeholder="搜尋...">
+<div id="cardList" class="grid"></div>
+<p id="selectedCount">已選: 0</p>
+<button onclick="startGame()">下一步</button>
+</div>
+
+<div class="container hidden" id="gamePage">
+<div id="pool" class="grid"></div>
+<div style="display:flex" id="zones"></div>
+<div id="message"></div>
+<button onclick="finishGame()">完成</button>
+</div>
+
+<script>
+
+const cards = [
+// 水果
+{category:"水果",name:"哈密瓜",image:"images/水果/哈密瓜.png"},
+{category:"水果",name:"士多啤梨",image:"images/水果/士多啤梨.png"},
+{category:"水果",name:"奇異果",image:"images/水果/奇異果.png"},
+{category:"水果",name:"提子",image:"images/水果/提子.png"},
+{category:"水果",name:"木瓜",image:"images/水果/木瓜.png"},
+{category:"水果",name:"楊桃",image:"images/水果/楊桃.png"},
+{category:"水果",name:"榴槤",image:"images/水果/榴槤.png"},
+{category:"水果",name:"橙",image:"images/水果/橙.png"},
+{category:"水果",name:"檸檬",image:"images/水果/檸檬.png"},
+{category:"水果",name:"火龍果",image:"images/水果/火龍果.png"},
+{category:"水果",name:"牛油果",image:"images/水果/牛油果.png"},
+{category:"水果",name:"芒果",image:"images/水果/芒果.png"},
+{category:"水果",name:"荔枝",image:"images/水果/荔枝.png"},
+{category:"水果",name:"菠蘿",image:"images/水果/菠蘿.png"},
+{category:"水果",name:"藍莓",image:"images/水果/藍莓.png"},
+{category:"水果",name:"蘋果",image:"images/水果/蘋果.png"},
+{category:"水果",name:"西瓜",image:"images/水果/西瓜.png"},
+{category:"水果",name:"車厘子",image:"images/水果/車厘子.png"},
+{category:"水果",name:"香蕉",image:"images/水果/香蕉.png"},
+{category:"水果",name:"龍眼",image:"images/水果/龍眼.png"},
+
+// 蔬菜
+{category:"蔬菜",name:"南瓜",image:"images/蔬菜/南瓜.png"},
+{category:"蔬菜",name:"娃娃菜",image:"images/蔬菜/娃娃菜.png"},
+{category:"蔬菜",name:"椰菜",image:"images/蔬菜/椰菜.png"},
+{category:"蔬菜",name:"椰菜花",image:"images/蔬菜/椰菜花.png"},
+{category:"蔬菜",name:"洋蔥",image:"images/蔬菜/洋蔥.png"},
+{category:"蔬菜",name:"生菜",image:"images/蔬菜/生菜.png"},
+{category:"蔬菜",name:"番薯",image:"images/蔬菜/番薯.png"},
+{category:"蔬菜",name:"白菜",image:"images/蔬菜/白菜.png"},
+{category:"蔬菜",name:"粟米",image:"images/蔬菜/粟米.png"},
+{category:"蔬菜",name:"紅椒",image:"images/蔬菜/紅椒.png"},
+{category:"蔬菜",name:"紅蘿蔔",image:"images/蔬菜/紅蘿蔔.png"},
+{category:"蔬菜",name:"茄子",image:"images/蔬菜/茄子.png"},
+{category:"蔬菜",name:"菜心",image:"images/蔬菜/菜心.png"},
+{category:"蔬菜",name:"菠菜",image:"images/蔬菜/菠菜.png"},
+{category:"蔬菜",name:"蕃茄",image:"images/蔬菜/蕃茄.png"},
+{category:"蔬菜",name:"薯仔",image:"images/蔬菜/薯仔.png"},
+{category:"蔬菜",name:"蘑菇",image:"images/蔬菜/蘑菇.png"},
+{category:"蔬菜",name:"蘿蔔",image:"images/蔬菜/蘿蔔.png"},
+{category:"蔬菜",name:"西蘭花",image:"images/蔬菜/西蘭花.png"},
+{category:"蔬菜",name:"辣椒",image:"images/蔬菜/辣椒.png"},
+{category:"蔬菜",name:"青椒",image:"images/蔬菜/青椒.png"},
+{category:"蔬菜",name:"青瓜",image:"images/蔬菜/青瓜.png"},
+{category:"蔬菜",name:"青豆",image:"images/蔬菜/青豆.png"},
+{category:"蔬菜",name:"黃椒",image:"images/蔬菜/黃椒.png"},
+
+// 動物（節錄但大量）
+{category:"動物",name:"企鵝",image:"images/動物/企鵝.png"},
+{category:"動物",name:"倉鼠",image:"images/動物/倉鼠.png"},
+{category:"動物",name:"兔",image:"images/動物/兔.png"},
+{category:"動物",name:"北極熊",image:"images/動物/北極熊.png"},
+{category:"動物",name:"大象",image:"images/動物/大象.png"},
+{category:"動物",name:"天鵝",image:"images/動物/天鵝.png"},
+{category:"動物",name:"斑馬",image:"images/動物/斑馬.png"},
+{category:"動物",name:"樹熊",image:"images/動物/樹熊.png"},
+{category:"動物",name:"河馬",image:"images/動物/河馬.png"},
+{category:"動物",name:"熊",image:"images/動物/熊.png"},
+{category:"動物",name:"熊貓",image:"images/動物/熊貓.png"},
+{category:"動物",name:"牛",image:"images/動物/牛.png"},
+{category:"動物",name:"狐狸",image:"images/動物/狐狸.png"},
+{category:"動物",name:"狗",image:"images/動物/狗.png"},
+{category:"動物",name:"獅子",image:"images/動物/獅子.png"},
+{category:"動物",name:"羊",image:"images/動物/羊.png"},
+{category:"動物",name:"老虎",image:"images/動物/老虎.png"},
+{category:"動物",name:"老鼠",image:"images/動物/老鼠.png"},
+{category:"動物",name:"蛇",image:"images/動物/蛇.png"},
+{category:"動物",name:"袋鼠",image:"images/動物/袋鼠.png"},
+{category:"動物",name:"豬",image:"images/動物/豬.png"},
+{category:"動物",name:"豹",image:"images/動物/豹.png"},
+{category:"動物",name:"貓",image:"images/動物/貓.png"},
+{category:"動物",name:"貓頭鷹",image:"images/動物/貓頭鷹.png"},
+{category:"動物",name:"長頸鹿",image:"images/動物/長頸鹿.png"},
+{category:"動物",name:"雞",image:"images/動物/雞.png"},
+{category:"動物",name:"馬",image:"images/動物/馬.png"},
+{category:"動物",name:"駱駝",image:"images/動物/駱駝.png"},
+{category:"動物",name:"鱷魚",image:"images/動物/鱷魚.png"},
+{category:"動物",name:"鴨",image:"images/動物/鴨.png"},
+{category:"動物",name:"鸚鵡",image:"images/動物/鸚鵡.png"},
+{category:"動物",name:"鹿",image:"images/動物/鹿.png"},
+{category:"動物",name:"龜",image:"images/動物/龜.png"}
+];
+
+let selected = [];
+let placed = {};
+let score = 0;
+
+function renderSelect(){
+  const list=document.getElementById("cardList");
+  list.innerHTML="";
+  cards.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<img src="${c.image}"><div>${c.name}</div>`;
+    div.onclick=()=>{
+      if(selected.includes(c)){
+        selected=selected.filter(x=>x!==c);
+        div.classList.remove("selected");
+      }else{
+        selected.push(c);
+        div.classList.add("selected");
+      }
+      document.getElementById("selectedCount").innerText="已選: "+selected.length;
+    };
+    list.appendChild(div);
+  });
+}
+
+function startGame(){
+  document.getElementById("selectPage").classList.add("hidden");
+  document.getElementById("gamePage").classList.remove("hidden");
+
+  const pool=document.getElementById("pool");
+  pool.innerHTML="";
+
+  selected.sort(()=>Math.random()-0.5).forEach(c=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.draggable=true;
+    div.innerHTML=`<img src="${c.image}"><div>${c.name}</div>`;
+    div.ondragstart=e=>e.dataTransfer.setData("id",c.id);
+    pool.appendChild(div);
+  });
+
+  const zones=document.getElementById("zones");
+  zones.innerHTML="";
+
+  const cats=[...new Set(selected.map(c=>c.category))];
+
+  cats.forEach(cat=>{
+    const z=document.createElement("div");
+    z.className="dropzone";
+    z.innerHTML=`<h3>${cat}</h3>`;
+    z.ondragover=e=>e.preventDefault();
+    z.ondrop=e=>handleDrop(e,cat,z);
+    zones.appendChild(z);
+  });
+}
+
+function handleDrop(e,cat,zone){
+  const id=e.dataTransfer.getData("id");
+  const card=selected.find(c=>c.id==id);
+
+  if(placed[id]) return;
+
+  const div=document.createElement("div");
+  div.innerHTML=`<img src="${card.image}" width=50><div>${card.name}</div>`;
+  zone.appendChild(div);
+
+  placed[id]=cat;
+
+  if(card.category===cat){
+    score+=10;
+    speak(card.name+"係"+cat);
+    playSound("star.mp3");
+    showMsg("⭐ 正確！");
+  }else{
+    score-=5;
+    playSound("wrong.mp3");
+    showMsg("❌ 錯誤");
+  }
+
+  document.getElementById("score").innerText="分數: "+score;
+}
+
+function showMsg(msg){
+  document.getElementById("message").innerText=msg;
+}
+
+function speak(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="zh-HK";
+  speechSynthesis.speak(u);
+}
+
+function playSound(file){
+  new Audio("sounds/"+file).play();
+}
+
+function finishGame(){
+  launchConfetti();
+  playSound("hooray.mp3");
+}
+
+function launchConfetti(){
+  for(let i=0;i<100;i++){
+    const div=document.createElement("div");
+    div.style.position="fixed";
+    div.style.left=Math.random()*100+"%";
+    div.style.top="0";
+    div.style.width="10px";
+    div.style.height="10px";
+    div.style.background="red";
+    document.body.appendChild(div);
+    let fall=setInterval(()=>{
+      div.style.top=(div.offsetTop+5)+"px";
+      if(div.offsetTop>window.innerHeight){clearInterval(fall);div.remove();}
+    },20);
+  }
+}
+
+renderSelect();
+
+</script>
 </body>
 </html>

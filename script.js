@@ -268,28 +268,20 @@ let selectedItems = [];
 let gameMode = '';
 
 const getCatColor = (index) => colorPalette[index % colorPalette.length];
+const sounds = { star: new Audio('sounds/star.mp3'), wrong: new Audio('sounds/wrong.mp3'), hooray: new Audio('sounds/hooray.mp3') };
 
-// 音效管理器：防止重疊播放
-const sounds = {
-    star: new Audio('sounds/star.mp3'),
-    wrong: new Audio('sounds/wrong.mp3'),
-    hooray: new Audio('sounds/hooray.mp3')
-};
-function playSfx(name) {
-    sounds[name].pause();
-    sounds[name].currentTime = 0;
-    sounds[name].play().catch(() => {});
-}
+function playSfx(n) { sounds[n].pause(); sounds[n].currentTime = 0; sounds[n].play().catch(()=>{}); }
 
 window.onload = function() {
     const nextBtn = document.getElementById('global-next-btn');
 
     document.getElementById('nav-btn-sort').onclick = () => {
         nextBtn.classList.add('hidden');
+        // Modification 1: Orange and Green buttons
         document.getElementById('main-stage').innerHTML = `
-            <div style="text-align:center; padding-top:15vh; display:flex; justify-content:center; gap:30px;">
-                <button class="pill-btn btn-orange" style="width:240px; height:100px; font-size:26px;" id="mode-cat">按類別分類</button>
-                <button class="pill-btn btn-pink" style="width:240px; height:100px; font-size:26px;" id="mode-free">自由分類</button>
+            <div style="text-align:center; padding-top:20vh; display:flex; justify-content:center; gap:30px;">
+                <button class="pill-btn btn-orange" style="width:260px; height:110px; font-size:28px;" id="mode-cat">按類別分類</button>
+                <button class="pill-btn btn-green" style="width:260px; height:110px; font-size:28px;" id="mode-free">自由分類</button>
             </div>`;
         document.getElementById('mode-cat').onclick = () => enterSelection('by-category');
         document.getElementById('mode-free').onclick = () => enterSelection('free');
@@ -301,20 +293,15 @@ window.onload = function() {
         else renderPrepBoard();
     };
 
-    // 控制項連動
     document.getElementById('sizeSlider').oninput = (e) => document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
     document.getElementById('textToggle').onchange = (e) => document.body.classList.toggle('no-text', !e.target.checked);
-    document.getElementById('bgSelect').onchange = (e) => {
-        const val = e.target.value;
-        document.body.style.background = val === 'white' ? 'white' : `url('images/${val}') center/cover fixed`;
-    };
+    document.getElementById('bgSelect').onchange = (e) => document.body.style.background = e.target.value === 'white' ? 'white' : `url('images/${e.target.value}') center/cover fixed`;
 };
 
 function renderCardHTML(item, isSelectable) {
     const isSelected = selectedItems.some(s => s.path === item.path);
     return `<div class="card ${isSelected && isSelectable ? 'selected' : ''}" 
                  data-path="${item.path}" data-cat="${item.cat}" data-name="${item.name}" 
-                 style="transform:none !important;"
                  ${isSelectable ? 'onclick="toggleCard(this)"' : ''}>
                 <img src="${item.path}">
                 <div class="card-label">${item.name}</div>
@@ -325,27 +312,27 @@ function enterSelection(mode) {
     gameMode = mode;
     const stage = document.getElementById('main-stage');
     stage.innerHTML = `
-        <div style="position:sticky; top:0; background:white; padding:12px 20px; z-index:1000; display:flex; gap:15px; align-items:center; border-bottom:1px solid #ddd;">
+        <div style="position:sticky; top:0; background:white; padding:15px 25px; z-index:1000; display:flex; gap:15px; align-items:center; border-bottom:1px solid #ddd;">
             <button class="pill-btn btn-grey" onclick="location.reload()">返回</button>
-            <select class="pill-btn" id="jumpSelect" style="background:#eee; color:#333; box-shadow:none; border:1px solid #ccc;">
+            <select class="pill-btn" id="jumpSelect" style="background:#f5f5f5; color:#333; border:1px solid #ccc; width:180px;">
                 <option value="">🚀 跳轉至...</option>
                 ${categories.map(c => `<option value="section-${c}">${c}</option>`).join('')}
             </select>
-            <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." style="flex:1; border-radius:10px; border:1px solid #ccc; padding:8px 15px;">
+            <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
         </div>
         <div id="selection-content">
             ${categories.map(cat => `
                 <div id="section-${cat}" style="padding:10px 20px;">
-                    <div style="background:var(--orange); color:white; padding:10px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <span style="font-size:20px; font-weight:bold;">${cat}</span>
-                        <button class="pill-btn btn-green" style="height:32px; font-size:14px;" onclick="selectAllInCategory('${cat}')">全選</button>
+                    <div style="background:var(--orange); color:white; padding:12px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                        <span style="font-size:22px; font-weight:bold;">${cat}</span>
+                        <button class="pill-btn btn-green" style="height:35px;" onclick="selectAllInCategory('${cat}')">全選</button>
                     </div>
                     <div class="grid-layout">
                         ${library.filter(i => i.cat === cat).map(i => renderCardHTML(i, true)).join('')}
                     </div>
                 </div>
             `).join('')}
-        </div>`;
+        </div><div style="height:100px;"></div>`;
     
     document.getElementById('jumpSelect').onchange = (e) => {
         const el = document.getElementById(e.target.value);
@@ -355,7 +342,7 @@ function enterSelection(mode) {
         const q = e.target.value;
         document.querySelectorAll('.card').forEach(c => c.style.display = c.dataset.name.includes(q) ? 'block' : 'none');
     };
-    updateNextButton();
+    updateNextButton(); // Ensure Proceed button shows if items are already selected
 }
 
 function toggleCard(el) {
@@ -382,14 +369,12 @@ function renderPrepBoard() {
     const stage = document.getElementById('main-stage');
     const catsInGame = [...new Set(selectedItems.map(i => i.cat))];
     stage.innerHTML = `
-        <div style="text-align:center; padding:30px 0;">
-            <h2 style="font-size:42px; color:white; text-shadow:2px 2px 10px rgba(0,0,0,0.5);">預備...</h2>
-        </div>
+        <div style="text-align:center; padding:30px;"><h2 style="font-size:45px; color:white; text-shadow:2px 2px 8px rgba(0,0,0,0.4);">預備...</h2></div>
         <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; padding:0 20px;">
             ${catsInGame.map((cat, idx) => `
-                <div class="category-box" style="border-color:${getCatColor(idx)}; height:auto; min-height:200px;">
+                <div class="category-box" style="border-color:${getCatColor(idx)}; height:auto; min-height:180px;">
                     <div class="cat-header" style="background:${getCatColor(idx)}">
-                        <img src="images/categories/${cat}.png">
+                        <img src="images/categories/${cat}.png" style="background:transparent;">
                         ${cat}
                     </div>
                     <div class="grid-layout">${selectedItems.filter(i => i.cat === cat).map(i => renderCardHTML(i, false)).join('')}</div>
@@ -397,7 +382,7 @@ function renderPrepBoard() {
             `).join('')}
         </div>
         <div style="text-align:center; padding:50px;">
-            <button class="pill-btn btn-orange" id="start-game-btn" style="width:300px; height:85px; font-size:32px; border-radius:20px;">開始遊戲 🚀</button>
+            <button class="pill-btn btn-orange" id="start-game-btn" style="width:300px; height:80px; font-size:32px; border-radius:20px;">開始遊戲 🚀</button>
             <br><button class="pill-btn btn-grey" onclick="enterSelection('${gameMode}')" style="margin-top:20px;">返回修改</button>
         </div>`;
     document.getElementById('start-game-btn').onclick = renderGameStage;
@@ -407,67 +392,52 @@ function renderGameStage() {
     const stage = document.getElementById('main-stage');
     const isFree = gameMode === 'free';
     const catsInGame = isFree ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
-    
     stage.innerHTML = `
         <div id="game-wrapper">
             <div id="shuffle-box" class="grid-layout"></div>
             <div id="zones-container">
                 ${catsInGame.map((cat, idx) => `
                     <div class="category-box target-zone" data-target="${isFree ? 'any' : cat}" style="border-color:${getCatColor(idx)}">
-                        ${!isFree ? `
-                        <div class="cat-header" style="background:${getCatColor(idx)}">
-                            <img src="images/categories/${cat}.png">
-                            ${cat}
-                        </div>` : ''}
+                        ${!isFree ? `<div class="cat-header" style="background:${getCatColor(idx)}"><img src="images/categories/${cat}.png">${cat}</div>` : ''}
                         <div class="inner-zone grid-layout"></div>
                     </div>
                 `).join('')}
             </div>
             ${isFree ? `<div style="text-align:center; padding:10px;"><button class="pill-btn btn-orange" id="finish-btn">完成 🏁</button></div>` : ''}
         </div>`;
-
-    const shuffleBox = document.getElementById('shuffle-box');
-    [...selectedItems].sort(() => Math.random() - 0.5).forEach(item => {
-        shuffleBox.insertAdjacentHTML('beforeend', renderCardHTML(item, false));
-    });
-
+    const sb = document.getElementById('shuffle-box');
+    [...selectedItems].sort(() => Math.random() - 0.5).forEach(i => sb.insertAdjacentHTML('beforeend', renderCardHTML(i, false)));
     if(isFree) document.getElementById('finish-btn').onclick = finishGame;
     initInteract();
 }
 
 function initInteract() {
     interact('.card').draggable({
-        inertia: false,
         listeners: {
-            start(event) { event.target.classList.add('dragging'); },
             move(event) {
                 const t = event.target;
                 const x = (parseFloat(t.getAttribute('data-x')) || 0) + event.dx;
                 const y = (parseFloat(t.getAttribute('data-y')) || 0) + event.dy;
                 t.style.transform = `translate(${x}px, ${y}px)`;
                 t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                t.style.zIndex = 10000;
             },
-            end(event) { event.target.classList.remove('dragging'); }
+            end(event) { event.target.style.zIndex = ""; }
         }
     });
-
     interact('.target-zone, #shuffle-box').dropzone({
         overlap: 0.1,
         ondrop(event) {
             const card = event.relatedTarget;
             const zone = event.currentTarget;
-            const targetGrid = zone.classList.contains('target-zone') ? zone.querySelector('.inner-zone') : zone;
-
             card.style.transform = "none";
             card.removeAttribute('data-x'); card.removeAttribute('data-y');
-            targetGrid.appendChild(card);
-
+            (zone.classList.contains('target-zone') ? zone.querySelector('.inner-zone') : zone).appendChild(card);
             if (zone.classList.contains('target-zone')) {
-                const isCorrect = (zone.dataset.target === 'any' || card.dataset.cat === zone.dataset.target);
-                showFeedback(card, isCorrect);
-                playSfx(isCorrect ? 'star' : 'wrong');
+                const correct = (zone.dataset.target === 'any' || card.dataset.cat === zone.dataset.target);
+                showFeedback(card, correct);
+                playSfx(correct ? 'star' : 'wrong');
             }
-
             if (gameMode === 'by-category' && document.getElementById('shuffle-box').children.length === 0) {
                 if (checkAllCorrect()) setTimeout(finishGame, 500);
             }
@@ -477,10 +447,9 @@ function initInteract() {
 
 function checkAllCorrect() {
     const zones = document.querySelectorAll('.target-zone');
-    for (let zone of zones) {
-        const target = zone.dataset.target;
-        const cards = zone.querySelectorAll('.card');
-        for (let card of cards) { if (card.dataset.cat !== target) return false; }
+    for (let z of zones) {
+        const t = z.dataset.target;
+        for (let c of z.querySelectorAll('.card')) { if (c.dataset.cat !== t) return false; }
     }
     return true;
 }
@@ -493,7 +462,4 @@ function showFeedback(el, correct) {
     setTimeout(() => emo.remove(), 600);
 }
 
-function finishGame() {
-    playSfx('hooray');
-    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-}
+function finishGame() { playSfx('hooray'); confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }

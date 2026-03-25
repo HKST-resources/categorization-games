@@ -1,5 +1,5 @@
 :root {
-    --card-size: 120px;
+    --card-size: 130px; /* Slightly adjusted for better fit */
     --pink: #fb6764; 
     --blue: #4bd8f8; 
     --green: #83bb21; 
@@ -15,20 +15,17 @@ body {
 
 .hidden { display: none !important; }
 
-/* 頂部導航列 - 恢復原始三色按鈕與單行控制項 */
+/* --- Top Bar (Locked) --- */
 .top-bar {
     position: fixed; top: 0; left: 0; width: 100%; height: 65px;
     background: white; display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; box-sizing: border-box; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-
 .nav-left, .nav-right { display: flex; align-items: center; gap: 12px; }
-
-/* 右側控制項強制單行不換行 */
 .nav-right { white-space: nowrap; flex-shrink: 0; }
 .control-item { display: flex; align-items: center; gap: 5px; font-size: 15px; font-weight: bold; }
 
-/* 按鈕樣式 */
+/* --- Buttons --- */
 .pill-btn {
     border: none; border-radius: 10px; padding: 0 15px; color: white;
     height: 38px; cursor: pointer; font-weight: bold; font-size: 15px;
@@ -40,58 +37,55 @@ body {
 .btn-blue { background: var(--blue); }
 .btn-muted-green { background: var(--muted-green); }
 .btn-green { background: var(--green); }
+.btn-pink { background: var(--pink); }
 .btn-grey { background: #95a5a6; }
 
-/* 核心容器與滾動區 */
+/* --- The Neat Grid (Selection & Prep) --- */
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--card-size));
+    gap: 20px; /* Consistent gaps */
+    padding: 20px;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 #main-stage {
     margin-top: 65px; height: calc(100vh - 65px);
     overflow-y: auto; overflow-x: hidden;
 }
 
-/* 網格系統 - 徹底防止重疊 */
-.grid-layout {
-    display: grid; grid-template-columns: repeat(auto-fill, var(--card-size));
-    gap: 20px; padding: 20px; justify-content: center; align-items: start;
-}
-
+/* Card Styling - Resetting transforms to prevent overlap */
 .card {
-    background: white; border-radius: 18px; padding: 10px; text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08); width: var(--card-size);
-    border: 4px solid transparent; cursor: grab;
-    display: flex; flex-direction: column; height: fit-content !important;
-    position: relative; touch-action: none;
+    background: white; border-radius: 15px; padding: 10px; text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: var(--card-size);
+    border: 4px solid transparent; cursor: pointer;
+    display: flex; flex-direction: column; 
+    position: relative !important; 
+    transform: none !important; /* Force no overlap in selection */
 }
 .card.selected { border-color: var(--green); background: #f9fff9; }
 .card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; pointer-events: none; }
 .card-label { margin-top: 8px; font-size: 15px; font-weight: bold; color: #333; }
-body.no-text .card-label { display: none; }
 
-/* 遊戲階段佈局 */
-#game-wrapper {
-    height: 100%; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box;
-}
+/* Game Stage Layout */
+#game-wrapper { height: 100%; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; }
 #shuffle-box {
     height: 35%; background: rgba(255,255,255,0.3); border: 3px dashed white;
-    border-radius: 20px; margin-bottom: 15px; overflow-y: auto; position: relative;
+    border-radius: 20px; margin-bottom: 10px; overflow-y: auto;
 }
 #zones-container { flex: 1; display: flex; justify-content: center; gap: 15px; overflow: hidden; }
-.category-box {
-    flex: 1; min-width: 200px; background: rgba(255,255,255,0.9);
-    border-radius: 20px; border: 5px solid; display: flex; flex-direction: column; height: 100%;
-}
-.cat-header {
-    padding: 8px; color: white; font-size: 20px; font-weight: bold;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-}
-.cat-header img { height: 60px; width: 60px; object-fit: contain; background: transparent; }
-.inner-zone { flex: 1; overflow-y: auto; align-content: start; }
+.category-box { flex: 1; min-width: 180px; background: rgba(255,255,255,0.9); border-radius: 20px; border: 5px solid; display: flex; flex-direction: column; }
+.cat-header { padding: 8px; color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.cat-header img { height: 55px; width: 55px; object-fit: contain; }
+.inner-zone { flex: 1; overflow-y: auto; }
 
-/* 拖拽效果 */
-.card.dragging { z-index: 10000 !important; opacity: 0.9; transform: scale(1.05) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-
-/* 反饋動畫 */
-.feedback-emoji {
-    position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-    font-size: 55px; z-index: 10001; animation: popUp 0.6s ease-out forwards;
+/* Floating Proceed Button */
+.floating-next {
+    position: fixed; bottom: 30px; right: 30px; 
+    height: 65px; padding: 0 40px; border-radius: 35px; 
+    font-size: 22px; z-index: 10001; 
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
-@keyframes popUp { 0% { opacity: 0; transform: translate(-50%, 20px); } 100% { opacity: 0; transform: translate(-50%, -60px); } }

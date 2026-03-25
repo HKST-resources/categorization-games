@@ -8,8 +8,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --card-width: 110px; --card-font-size: 1.1rem; }
-        body { font-family: sans-serif; overflow-x: hidden; user-select: none; }
+        :root { 
+            --card-width: 110px; 
+            --card-font-size: 1.1rem;
+            --blue-main: #4BD8F8;
+            --pink-main: #FB6764;
+        }
+        body { font-family: "PingFang HK", "Heiti TC", sans-serif; overflow-x: hidden; user-select: none; }
         
         .bg-park { background: url('images/park.jpg') center/cover fixed; }
         .bg-room { background: url('images/room.jpg') center/cover fixed; }
@@ -17,9 +22,14 @@
         .bg-game { background: url('images/game.jpg') center/cover fixed; }
         .bg-white { background-color: #ffffff; }
 
-        .game-viewport { height: calc(100vh - 70px); display: flex; flex-direction: column; gap: 1rem; }
+        /* Button Aesthetics */
+        .btn-blue { background-color: var(--blue-main); border-bottom: 5px solid #3bb8d6; color: white; }
+        .btn-orange { background-color: #f97316; border-bottom: 5px solid #c2410c; color: white; }
+        .btn-emerald { background-color: #10b981; border-bottom: 5px solid #047857; color: white; }
+        .btn-gray { background-color: #9ca3af; border-bottom: 5px solid #4b5563; color: white; }
+        .btn-active:active { transform: translateY(2px); border-bottom-width: 2px; }
 
-        /* Consistent Card Style */
+        /* Card Logic */
         .vocab-card {
             width: var(--card-width);
             flex-shrink: 0;
@@ -29,42 +39,24 @@
             background: white;
             padding: 8px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s;
         }
         .vocab-card p { font-size: var(--card-font-size); font-weight: 400; text-align: center; margin-top: 4px; }
-        .selected-card { border: 6px solid #22c55e !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+        .selected-card { outline: 6px solid #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
 
-        /* Rigid Category Boxes */
-        .category-column {
-            width: 260px;
-            height: 100%;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            border-radius: 24px;
-            border-width: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-        }
+        /* Automatic Square wrapping when text is hidden */
+        .hide-text p { display: none !important; }
+        .hide-text .vocab-card { height: var(--card-width); justify-content: center; }
 
-        .box-pink { border-color: #FB6764; }
-        .box-blue { border-color: #4BD8F8; }
-        .box-green { border-color: #4ad395; }
-        .box-orange { border-color: #fb923c; }
-
-        /* 3D Button Shadows matching their colors */
-        .btn-blue { background-color: #3b82f6; border-bottom: 6px solid #1d4ed8; }
-        .btn-blue:active { transform: translateY(3px); border-bottom-width: 2px; }
+        /* Category Box Design */
+        .cat-box { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: white; border-width: 4px; height: 100%; }
+        .cat-header { padding: 10px 15px; color: white; font-weight: 900; display: flex; items-center: center; gap: 10px; }
         
-        .btn-orange { background-color: #f97316; border-bottom: 6px solid #c2410c; }
-        .btn-orange:active { transform: translateY(3px); border-bottom-width: 2px; }
-
-        .btn-emerald { background-color: #10b981; border-bottom: 6px solid #047857; }
-        .btn-emerald:active { transform: translateY(3px); border-bottom-width: 2px; }
-
-        .btn-gray { background-color: #6b7280; border-bottom: 6px solid #374151; }
-        .btn-gray:active { transform: translateY(3px); border-bottom-width: 2px; }
+        .theme-pink { border-color: #FB6764; } .theme-pink .cat-header { background-color: #FB6764; }
+        .theme-blue { border-color: #4BD8F8; } .theme-blue .cat-header { background-color: #4BD8F8; }
+        .theme-green { border-color: #4ad395; } .theme-green .cat-header { background-color: #4ad395; }
+        .theme-orange { border-color: #fb923c; } .theme-orange .cat-header { background-color: #fb923c; }
 
         .feedback-pop {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
@@ -77,22 +69,22 @@
             100% { transform: translate(-50%, -50px) scale(1); opacity: 0; }
         }
 
-        .hidden-text p { display: none; }
+        .game-viewport { height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 1rem; }
     </style>
 </head>
 <body class="bg-park">
 
-    <nav class="fixed top-0 left-0 w-full h-12 bg-white shadow-md z-[100] flex items-center justify-between px-4">
+    <nav class="fixed top-0 left-0 w-full h-14 bg-white shadow-sm z-[100] flex items-center justify-between px-4">
         <div class="flex gap-2">
-            <button onclick="showSubModes()" class="px-4 py-1 text-white rounded-full font-bold btn-blue">分類遊戲</button>
-            <button class="px-4 py-1 text-white rounded-full font-bold opacity-50 btn-orange">擴展性命名</button>
-            <button class="px-4 py-1 text-white rounded-full font-bold opacity-50 btn-gray">快速命名</button>
+            <button onclick="showSubModes()" class="px-5 py-1 rounded-xl font-bold btn-blue btn-active">分類遊戲</button>
+            <button class="px-5 py-1 rounded-xl font-bold opacity-50 btn-orange">擴展性命名</button>
+            <button class="px-5 py-1 rounded-xl font-bold opacity-50 btn-gray">快速命名</button>
         </div>
 
         <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
             <div class="flex items-center gap-2">
-                <span>圖片大小</span>
-                <input type="range" id="sizeSlider" min="80" max="200" value="110" oninput="handleSizeChange(this.value)">
+                <span>大小</span>
+                <input type="range" id="sizeSlider" min="80" max="220" value="110" oninput="handleSizeChange(this.value)">
             </div>
             <label class="flex items-center gap-1 cursor-pointer">
                 <input type="checkbox" id="showTextToggle" checked onchange="handleTextToggle(this.checked)"> 顯示文字
@@ -104,11 +96,11 @@
                 <option value="game">遊戲</option>
                 <option value="white">純白</option>
             </select>
-            <button onclick="exportResult()" class="px-3 py-1 bg-emerald-500 text-white rounded-md">💾 匯出</button>
+            <button onclick="exportResult()" class="px-4 py-1 bg-emerald-500 text-white rounded-md font-bold btn-active">匯出 💾</button>
         </div>
     </nav>
 
-    <main id="app" class="mt-14 p-4">
+    <main id="app" class="mt-16 p-4">
         </main>
 
     <script>
@@ -129,169 +121,142 @@
         });
 
         const categories = [...new Set(vocabList.map(item => item.cat))];
-        const boxStyles = ['box-pink', 'box-blue', 'box-green', 'box-orange'];
+        const themeClasses = ['theme-pink', 'theme-blue', 'theme-green', 'theme-orange'];
 
         let view = 'WELCOME';
         let gameMode = ''; 
         let selectedItems = [];
-        let searchTerm = '';
-        const sounds = {
-            star: new Audio('sounds/star.mp3'),
-            wrong: new Audio('sounds/wrong.mp3'),
-            hooray: new Audio('sounds/hooray.mp3')
-        };
+        const sounds = { star: new Audio('sounds/star.mp3'), wrong: new Audio('sounds/wrong.mp3'), hooray: new Audio('sounds/hooray.mp3') };
 
-        function setView(v, mode) { view = v; if(mode) gameMode = mode; searchTerm = ''; updateView(); }
+        function setView(v, mode) { 
+            view = v; 
+            if(mode) gameMode = mode; 
+            updateView(); 
+        }
+
         function showSubModes() { view = 'SUB_MODES'; updateView(); }
 
         function updateView() {
             const app = document.getElementById('app');
-            app.innerHTML = '';
-            const textClass = document.getElementById('showTextToggle').checked ? '' : 'hidden-text';
-
+            const isTextHidden = !document.getElementById('showTextToggle').checked;
+            app.className = "mt-16 p-4 " + (isTextHidden ? "hide-text" : "");
+            
             if (view === 'WELCOME') {
-                app.innerHTML = `<div class="flex h-[80vh] items-center justify-center text-4xl text-sky-900">請選擇活動開始</div>`;
+                app.innerHTML = `<div class="flex h-[70vh] items-center justify-center text-3xl text-gray-400">請選擇上方活動開始</div>`;
             } 
             else if (view === 'SUB_MODES') {
                 app.innerHTML = `
                 <div class="flex flex-col items-center justify-center gap-12 py-20">
                     <div class="flex gap-10">
-                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-36 text-white text-3xl font-bold rounded-[2rem] btn-blue">按類別分類</button>
-                        <button onclick="setView('SELECT', 'free')" class="w-72 h-36 text-white text-3xl font-bold rounded-[2rem] btn-orange">自由分類</button>
+                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-blue btn-active">按類別分類</button>
+                        <button onclick="setView('SELECT', 'free')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-orange btn-active">自由分類</button>
                     </div>
                 </div>`;
             }
-            else if (view === 'SELECT') {
-                renderSelection(app, textClass);
-            }
-            else if (view === 'PREP') {
-                renderPrepBoard(app, textClass);
-            }
-            else if (view === 'GAME') {
-                renderGameStage(app, textClass);
-            }
+            else if (view === 'SELECT') { renderSelection(app); }
+            else if (view === 'PREP') { renderPrepBoard(app); }
+            else if (view === 'GAME') { renderGameStage(app); }
         }
 
-        function renderSelection(app, textClass) {
-            let html = `
-                <div class="sticky top-0 z-40 bg-white/95 p-5 rounded-2xl mb-4 shadow-md flex justify-between items-center border-4 border-sky-100">
+        function renderSelection(app) {
+            app.innerHTML = `
+                <div class="sticky top-14 z-40 bg-white/90 p-4 rounded-2xl mb-6 shadow-sm flex justify-between items-center border border-gray-200">
                     <div class="flex gap-4">
-                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView()" class="p-2 border rounded-xl font-bold">
-                            <option>快速跳至...</option>
-                            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                        </select>
-                        <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." value="${searchTerm}" class="p-2 border rounded-xl w-64" oninput="handleSearch(this.value)">
+                        <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-gray-200 rounded-xl w-64" oninput="filterGrid(this.value)">
                     </div>
-                    <button onclick="goNextFromSelect()" class="px-10 py-3 text-white rounded-full font-black text-xl btn-orange">下一步：已選取 ${selectedItems.length} 張</button>
+                    <button onclick="goNextFromSelect()" class="px-8 py-3 btn-orange btn-active rounded-full font-black text-xl">下一步：已選取 ${selectedItems.length} 張</button>
                 </div>
-                <div id="selection-grid" class="${textClass} flex flex-col gap-8">
+                <div id="selection-grid-container"></div>
+                <button onclick="setView('SUB_MODES')" class="mt-8 px-8 py-2 btn-gray btn-active rounded-full font-bold">返回</button>
             `;
+            filterGrid(''); // Initial render of grid
+        }
 
-            if (searchTerm) {
-                const filtered = vocabList.filter(v => v.name.includes(searchTerm));
-                html += `
-                    <div class="bg-white/40 p-6 rounded-2xl flex flex-wrap gap-4">
-                        ${filtered.map(v => renderCardItem(v)).join('')}
-                        ${filtered.length === 0 ? '<p class="text-xl p-10">找不到匹配的詞彙</p>' : ''}
-                    </div>
-                `;
+        function filterGrid(term) {
+            const container = document.getElementById('selection-grid-container');
+            if (!container) return;
+            let html = '';
+
+            if (term.trim()) {
+                const filtered = vocabList.filter(v => v.name.includes(term));
+                html = `<div class="flex flex-wrap gap-4 p-4 bg-white/30 rounded-2xl">${filtered.map(v => renderCardHTML(v)).join('')}</div>`;
             } else {
                 categories.forEach(cat => {
                     html += `
-                    <div id="section-${cat}">
-                        <div class="bg-orange-500 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-2xl font-bold tracking-wide">${cat}</span>
-                            <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 hover:bg-white/40 px-5 py-2 rounded-full font-bold">全選此類</button>
+                    <div id="section-${cat}" class="mb-6">
+                        <div class="bg-orange-500 text-white px-6 py-2 rounded-t-xl flex justify-between items-center shadow-sm">
+                            <span class="text-xl font-bold">${cat}</span>
+                            <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 px-4 py-1 rounded-full font-bold">全選</button>
                         </div>
-                        <div class="bg-white/40 p-5 rounded-b-2xl flex flex-wrap gap-3 items-start border-x-2 border-b-2 border-orange-100">
-                            ${vocabList.filter(v => v.cat === cat).map(v => renderCardItem(v)).join('')}
+                        <div class="bg-white/40 p-4 rounded-b-xl flex flex-wrap gap-4 border-x border-b border-orange-200">
+                            ${vocabList.filter(v => v.cat === cat).map(v => renderCardHTML(v)).join('')}
                         </div>
                     </div>`;
                 });
             }
-            app.innerHTML = html + `</div><button onclick="setView('SUB_MODES')" class="mt-10 mb-20 px-10 py-3 text-white rounded-full font-bold btn-gray">返回</button>`;
-            if(searchTerm) document.getElementById('searchInput').focus();
+            container.innerHTML = html;
         }
 
-        function renderCardItem(v) {
-            const isSelected = selectedItems.some(i => i.id === v.id);
-            return `
-                <div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer border-4 ${isSelected ? 'selected-card' : 'border-transparent'}">
-                    <img src="${v.path}" class="w-full aspect-square object-contain pointer-events-none">
-                    <p>${v.name}</p>
-                </div>
-            `;
+        function renderCardHTML(v) {
+            const active = selectedItems.some(i => i.id === v.id) ? 'selected-card' : '';
+            return `<div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer ${active}"><img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p></div>`;
         }
 
-        function renderPrepBoard(app, textClass) {
+        function renderPrepBoard(app) {
             const activeCats = [...new Set(selectedItems.map(i => i.cat))];
             app.innerHTML = `
-                <div class="flex flex-col items-center gap-8 ${textClass}">
-                    <div class="flex flex-wrap justify-center gap-8 w-full">
+                <div class="flex flex-col items-center gap-6">
+                    <button onclick="setView('SELECT')" class="px-6 py-2 btn-gray btn-active rounded-xl font-bold self-start">← 返回修改</button>
+                    <div class="flex flex-wrap justify-center gap-6 w-full">
                         ${activeCats.map((cat, idx) => `
-                            <div class="rounded-3xl p-8 ${boxStyles[idx] || 'box-orange'} shadow-xl min-w-[300px] bg-white/90">
-                                <div class="flex items-center gap-6 mb-6">
-                                    <img src="images/categories/${cat}.png" class="w-24 h-24 object-contain">
-                                    <h3 class="text-4xl font-black text-gray-700">${cat}</h3>
-                                </div>
-                                <div class="flex flex-wrap gap-4">
-                                    ${selectedItems.filter(i => i.cat === cat).map(i => `
-                                        <div class="vocab-card shadow-sm border border-gray-100"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>
-                                    `).join('')}
+                            <div class="cat-box w-80 ${themeClasses[idx] || 'theme-orange'}">
+                                <div class="cat-header"><img src="images/categories/${cat}.png" class="w-10 h-10 object-contain"> <span>${cat}</span></div>
+                                <div class="p-4 flex flex-wrap gap-3">
+                                    ${selectedItems.filter(i => i.cat === cat).map(i => `<div class="vocab-card shadow-sm border border-gray-100"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>`).join('')}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
-                    <div class="flex gap-6 pb-20">
-                        <button onclick="setView('SELECT')" class="px-10 py-4 text-white rounded-full font-bold text-xl btn-gray text-white">返回修改</button>
-                        <button onclick="setView('GAME')" class="px-20 py-5 text-white rounded-full font-black text-4xl btn-orange">開始遊戲 🚀</button>
-                    </div>
+                    <button onclick="setView('GAME')" class="px-20 py-5 btn-orange btn-active rounded-full font-black text-4xl mt-6">開始遊戲 🚀</button>
                 </div>
             `;
         }
 
-        function renderGameStage(app, textClass) {
+        function renderGameStage(app) {
             const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
             const zones = gameMode === 'free' ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
 
             app.innerHTML = `
-                <div class="game-viewport ${textClass}">
-                    <div id="shuffled-box" class="h-1/3 border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/90 overflow-y-auto shadow-inner">
+                <div class="game-viewport">
+                    <div id="shuffled-box" class="h-1/3 border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/70 overflow-y-auto shadow-inner">
                         ${shuffled.map((v) => `
                             <div id="${v.id}" data-cat="${v.cat}" class="vocab-card shadow-xl cursor-grab relative z-10" draggable="true" ondragstart="handleStart(event, '${v.cat}')">
-                                <img src="${v.path}" class="w-full pointer-events-none">
-                                <p>${v.name}</p>
-                                <div class="feedback-container"></div>
+                                <img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div class="flex-1 flex gap-6 overflow-x-auto pb-4 px-2 justify-center items-end">
+                    <div class="flex-1 flex gap-4 w-full overflow-x-auto pb-2 px-1">
                         ${zones.map((cat, idx) => `
-                            <div class="category-column ${boxStyles[idx] || 'box-orange'}" data-zone-cat="${cat}" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
-                                <div class="p-4 bg-white/50 rounded-t-xl shrink-0">
-                                    ${gameMode === 'ordered' ? `
-                                        <div class="flex flex-col items-center gap-2">
-                                            <img src="images/categories/${cat}.png" class="w-16 h-16 object-contain">
-                                            <h3 class="text-xl font-black text-gray-700 text-center">${cat}</h3>
-                                        </div>` : '<div class="h-12"></div>'}
+                            <div class="cat-box flex-1 min-w-[200px] ${themeClasses[idx] || 'theme-orange'}" data-zone-cat="${cat}" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
+                                <div class="cat-header">
+                                    <img src="images/categories/${cat}.png" class="w-8 h-8 object-contain">
+                                    <span class="text-lg">${cat}</span>
                                 </div>
                                 <div class="flex-1 overflow-y-auto p-4 flex flex-wrap gap-3 content-start justify-center slot-container"></div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div class="h-16 flex justify-center items-center gap-6 shrink-0">
-                        <button onclick="setView('SELECT')" class="px-8 py-2 text-white rounded-full font-bold btn-gray">返回</button>
-                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-12 py-3 text-white rounded-full font-black text-xl btn-emerald">完成分類 ✨</button>` : ''}
+                    <div class="h-12 flex justify-center gap-4 shrink-0">
+                        <button onclick="setView('SELECT')" class="px-6 py-1 btn-gray btn-active rounded-full font-bold">退出</button>
+                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-10 py-1 btn-emerald btn-active rounded-full font-bold">完成分類</button>` : ''}
                     </div>
                 </div>
             `;
         }
 
-        // Logic
-        function handleSearch(val) { searchTerm = val; updateView(); }
-
+        // Logic Functions
         function handleSizeChange(val) {
             document.documentElement.style.setProperty('--card-width', val + 'px');
             document.documentElement.style.setProperty('--card-font-size', (val/100) + 'rem');
@@ -299,7 +264,7 @@
 
         function handleTextToggle(isVisible) {
             const app = document.getElementById('app');
-            isVisible ? app.classList.remove('hidden-text') : app.classList.add('hidden-text');
+            isVisible ? app.classList.remove('hide-text') : app.classList.add('hide-text');
         }
 
         let currentDragCat = '';
@@ -324,17 +289,14 @@
             
             sounds[isCorrect ? 'star' : 'wrong'].currentTime = 0;
             sounds[isCorrect ? 'star' : 'wrong'].play();
-            
-            if (gameMode === 'ordered') checkWinConditions();
+            if (gameMode === 'ordered') checkWin();
         }
 
-        function checkWinConditions() {
+        function checkWin() {
             if (document.getElementById('shuffled-box').children.length > 0) return;
             const cards = document.querySelectorAll('.slot-container .vocab-card');
             let allCorrect = true;
-            cards.forEach(card => {
-                if (card.getAttribute('data-cat') !== card.closest('.category-column').getAttribute('data-zone-cat')) allCorrect = false;
-            });
+            cards.forEach(card => { if (card.getAttribute('data-cat') !== card.closest('.cat-box').getAttribute('data-zone-cat')) allCorrect = false; });
             if (allCorrect) finishGame(false);
         }
 
@@ -347,12 +309,12 @@
             const idx = selectedItems.findIndex(i => i.id === id);
             if (idx > -1) selectedItems.splice(idx, 1);
             else selectedItems.push(vocabList.find(v => v.id === id));
+            // Update UI without full refresh if possible, but for selection it's fine
             updateView();
         }
 
         function selectAllInCat(cat) {
-            const items = vocabList.filter(v => v.cat === cat);
-            items.forEach(i => { if(!selectedItems.some(s=>s.id===i.id)) selectedItems.push(i); });
+            vocabList.filter(v => v.cat === cat).forEach(i => { if(!selectedItems.some(s=>s.id===i.id)) selectedItems.push(i); });
             updateView();
         }
 

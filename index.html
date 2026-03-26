@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙分類遊戲</title>
+    <title>詞彙分類遊戲 - 專業優化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -13,23 +13,19 @@
             --card-font-size: 1.1rem;
             --blue-dark: #0EA5E9; 
             --orange-dark: #EA580C;
-            --pink-main: #FB6764;
-            --blue-main: #4BD8F8;
         }
 
-        /* --- IPAD & TOUCH OPTIMIZATION --- */
+        /* --- IPAD SYSTEM FIXES --- */
         html, body { 
             font-family: "PingFang HK", "Heiti TC", sans-serif; 
-            /* Prevent pull-to-refresh and bounce */
-            overscroll-behavior-y: none; 
-            overscroll-behavior-x: none;
+            overscroll-behavior: none; 
             overflow: hidden; 
             position: fixed;
             width: 100%;
             height: 100%;
             user-select: none; 
             -webkit-user-select: none;
-            touch-action: none;
+            touch-action: none; /* Disables browser-level panning/zooming */
         }
 
         .bg-park { background: url('images/park.jpg') center/cover fixed; }
@@ -51,32 +47,30 @@
             flex-direction: column;
             align-items: center;
             background: white;
-            padding: 8px;
+            padding: 6px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
-            touch-action: none; /* Prevents scrolling when dragging card */
-            -webkit-user-drag: none;
+            touch-action: none;
+            position: relative;
         }
         
-        /* Visual feedback when dragging */
+        /* Dragging state */
         .dragging {
-            opacity: 0.8;
-            transform: scale(1.1);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-            z-index: 1000 !important;
             position: fixed !important;
+            z-index: 1000 !important;
             pointer-events: none;
+            opacity: 0.9;
+            transform: scale(1.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
-        .vocab-card p { font-size: var(--card-font-size); font-weight: 400; text-align: center; margin-top: 4px; }
+        .vocab-card p { font-size: var(--card-font-size); font-weight: 400; text-align: center; margin-top: 2px; }
         .selected-card { outline: 6px solid #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
 
         .hide-text p { display: none !important; }
-        .hide-text .vocab-card { height: var(--card-width); justify-content: center; }
 
-        .cat-box { display: flex; flex-direction: column; border-radius: 24px; overflow: hidden; background: white; border-width: 6px; height: 100%; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-        .cat-header { padding: 15px 20px; color: white; font-weight: 900; display: flex; align-items: center; gap: 15px; }
+        .cat-box { display: flex; flex-direction: column; border-radius: 24px; overflow: hidden; background: white; border-width: 6px; height: 100%; }
+        .cat-header { padding: 10px 15px; color: white; font-weight: 900; display: flex; align-items: center; gap: 10px; }
         
         .theme-pink { border-color: #FB6764; } .theme-pink .cat-header { background-color: #FB6764; }
         .theme-blue { border-color: #4BD8F8; } .theme-blue .cat-header { background-color: #4BD8F8; }
@@ -84,43 +78,36 @@
         .theme-orange { border-color: #fb923c; } .theme-orange .cat-header { background-color: #fb923c; }
 
         .feedback-pop {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            font-size: 4rem; z-index: 50; pointer-events: none;
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            font-size: 3rem; z-index: 50; pointer-events: none;
             animation: popUp 0.8s ease-out forwards;
         }
         @keyframes popUp {
             0% { transform: translate(-50%, 10px) scale(0); opacity: 0; }
-            50% { transform: translate(-50%, -30px) scale(1.3); opacity: 1; }
-            100% { transform: translate(-50%, -50px) scale(1); opacity: 0; }
+            50% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -40px) scale(1); opacity: 0; }
         }
 
-        .game-viewport { height: calc(100vh - 110px); display: flex; flex-direction: column; gap: 1rem; }
-        main { overflow: hidden; height: 100vh; }
+        .game-viewport { height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 10px; }
+        main { height: 100vh; }
     </style>
 </head>
 <body class="bg-park">
 
     <nav class="fixed top-0 left-0 w-full h-14 bg-white shadow-sm z-[100] flex items-center justify-between px-4">
-        <div class="flex gap-2">
-            <button onclick="showSubModes()" class="px-5 py-1 rounded-xl font-bold btn-blue btn-active">分類遊戲</button>
-        </div>
-
+        <button onclick="showSubModes()" class="px-5 py-1 rounded-xl font-bold btn-blue btn-active">分類遊戲</button>
         <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
             <div class="flex items-center gap-2">
-                <span>大小</span>
-                <input type="range" id="sizeSlider" min="80" max="220" value="110" oninput="handleSizeChange(this.value)">
+                <span>基本大小</span>
+                <input type="range" id="sizeSlider" min="70" max="180" value="110" oninput="handleSizeChange(this.value)">
             </div>
             <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" id="showTextToggle" checked onchange="handleTextToggle(this.checked)"> 顯示文字
+                <input type="checkbox" id="showTextToggle" checked onchange="updateView()"> 顯示文字
             </label>
             <select onchange="document.body.className = 'bg-' + this.value" class="border rounded-md px-2 py-1 bg-gray-50">
-                <option value="park">草地</option>
-                <option value="room">房間</option>
-                <option value="road">馬路</option>
-                <option value="game">遊戲</option>
-                <option value="white">純白</option>
+                <option value="park">草地</option><option value="room">房間</option><option value="road">馬路</option><option value="game">遊戲</option><option value="white">純白</option>
             </select>
-            <button onclick="exportResult()" class="px-4 py-1 bg-emerald-600 text-white rounded-md font-bold btn-active shadow-md">匯出 💾</button>
+            <button onclick="exportResult()" class="px-4 py-1 bg-emerald-600 text-white rounded-md font-bold btn-active">匯出 💾</button>
         </div>
     </nav>
 
@@ -258,7 +245,7 @@
 文具	簿	文具/簿.png
 文具	膠水	文具/膠水.png
 文具	膠紙	文具/膠紙.png
-文具	万字夾	文具/万字夾.png
+文具	萬字夾	文具/萬字夾.png
 文具	螢光筆	文具/螢光筆.png
 文具	釘書機	文具/釘書機.png
 文具	鉛筆	文具/鉛筆.png
@@ -419,255 +406,247 @@
             
             if (view === 'SUB_MODES') {
                 app.innerHTML = `
-                <div class="flex flex-col items-center justify-center gap-12 py-20">
-                    <h1 class="text-4xl font-black text-blue-900 mb-4">請選擇分類方式</h1>
+                <div class="flex flex-col items-center justify-center h-[80vh] gap-12">
+                    <h1 class="text-4xl font-black text-blue-900">請選擇分類方式</h1>
                     <div class="flex gap-10">
                         <button onclick="setView('SELECT', 'ordered')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-blue btn-active">按類別分類</button>
                         <button onclick="setView('SELECT', 'free')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-orange btn-active">自由分類</button>
                     </div>
                 </div>`;
-            }
-            else if (view === 'SELECT') { renderSelection(app); }
-            else if (view === 'PREP') { renderPrepBoard(app); }
-            else if (view === 'GAME') { renderGameStage(app); }
+            } else if (view === 'SELECT') { renderSelection(app); }
+              else if (view === 'PREP') { renderPrepBoard(app); }
+              else if (view === 'GAME') { renderGameStage(app); }
         }
 
+        // --- Bug Fix 1: Selection Page Scrolling ---
         function renderSelection(app) {
             app.innerHTML = `
                 <div class="sticky top-14 z-40 bg-white/90 p-4 rounded-2xl mb-6 shadow-sm flex justify-between items-center border border-gray-200">
                     <div class="flex gap-4">
-                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView({behavior: 'smooth'})" class="p-2 border-2 border-gray-200 rounded-xl font-bold bg-white">
+                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView({behavior: 'smooth', block: 'center'})" class="p-2 border-2 border-gray-200 rounded-xl font-bold">
                             <option>跳至類別...</option>
                             ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>
-                        <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-gray-200 rounded-xl w-64" oninput="filterGrid(this.value)">
+                        <input type="text" id="searchInput" placeholder="🔍 搜尋..." class="p-2 border-2 border-gray-200 rounded-xl w-64" oninput="filterGrid(this.value)">
                     </div>
-                    <button onclick="goNextFromSelect()" class="px-8 py-3 btn-orange btn-active rounded-full font-black text-xl">下一步：已選取 ${selectedItems.length} 張</button>
+                    <button id="nextBtn" onclick="goNextFromSelect()" class="px-8 py-3 btn-orange btn-active rounded-full font-black text-xl">
+                        下一步 (已選 ${selectedItems.length} 張)
+                    </button>
                 </div>
-                <div id="selection-grid-container" style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch;"></div>
-                <button onclick="setView('SUB_MODES')" class="mt-8 px-10 py-2 btn-gray btn-active rounded-full font-bold">返回</button>
+                <div id="selection-grid-container" style="height: 65vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+                    ${renderSelectionGrid('')}
+                </div>
             `;
-            filterGrid('');
         }
 
         function filterGrid(term) {
-            const container = document.getElementById('selection-grid-container');
-            if (!container) return;
-            let html = '';
-            if (term.trim()) {
-                const filtered = vocabList.filter(v => v.name.includes(term));
-                html = `<div class="flex flex-wrap gap-4 p-4 bg-white/30 rounded-2xl">${filtered.map(v => renderCardHTML(v)).join('')}</div>`;
-            } else {
-                categories.forEach(cat => {
-                    html += `
-                    <div id="section-${cat}" class="mb-8">
-                        <div class="bg-orange-600 text-white px-6 py-2 rounded-t-xl flex justify-between items-center shadow-md">
-                            <span class="text-xl font-black">${cat}</span>
-                            <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 px-4 py-1 rounded-full font-bold hover:bg-white/40">全選</button>
-                        </div>
-                        <div class="bg-white/40 p-5 rounded-b-xl flex flex-wrap gap-4 border-x border-b border-orange-200">
-                            ${vocabList.filter(v => v.cat === cat).map(v => renderCardHTML(v)).join('')}
-                        </div>
-                    </div>`;
-                });
-            }
-            container.innerHTML = html;
+            document.getElementById('selection-grid-container').innerHTML = renderSelectionGrid(term);
         }
 
-        function renderCardHTML(v) {
-            const active = selectedItems.some(i => i.id === v.id) ? 'selected-card' : '';
-            return `<div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer ${active}"><img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p></div>`;
+        function renderSelectionGrid(term) {
+            let html = '';
+            const filteredList = term ? vocabList.filter(v => v.name.includes(term)) : vocabList;
+            
+            categories.forEach(cat => {
+                const itemsInCat = filteredList.filter(v => v.cat === cat);
+                if (itemsInCat.length === 0) return;
+                html += `
+                <div id="section-${cat}" class="mb-8">
+                    <div class="bg-blue-600 text-white px-6 py-2 rounded-t-xl flex justify-between items-center">
+                        <span class="text-xl font-black">${cat}</span>
+                        <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 px-4 py-1 rounded-full font-bold">全選</button>
+                    </div>
+                    <div class="bg-white/40 p-5 rounded-b-xl flex flex-wrap gap-4 border-x border-b border-blue-200">
+                        ${itemsInCat.map(v => {
+                            const active = selectedItems.some(i => i.id === v.id) ? 'selected-card' : '';
+                            return `<div id="card-${v.id}" onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer ${active}"><img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p></div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            });
+            return html;
+        }
+
+        // Updated toggleItem to NOT scroll
+        function toggleItem(id) {
+            const idx = selectedItems.findIndex(i => i.id === id);
+            const cardEl = document.getElementById(`card-${id}`);
+            
+            if (idx > -1) {
+                selectedItems.splice(idx, 1);
+                if(cardEl) cardEl.classList.remove('selected-card');
+            } else {
+                selectedItems.push(vocabList.find(v => v.id === id));
+                if(cardEl) cardEl.classList.add('selected-card');
+            }
+            document.getElementById('nextBtn').innerText = `下一步 (已選 ${selectedItems.length} 張)`;
         }
 
         function renderPrepBoard(app) {
             const activeCats = [...new Set(selectedItems.map(i => i.cat))];
             app.innerHTML = `
-                <div class="flex flex-col items-center gap-6" style="height: 85vh; overflow-y: auto;">
-                    <button onclick="setView('SELECT')" class="px-8 py-2 btn-gray btn-active rounded-xl font-bold self-start">← 返回修改</button>
+                <div class="flex flex-col items-center gap-6 h-[85vh] overflow-y-auto">
+                    <button onclick="setView('SELECT')" class="px-8 py-2 btn-gray btn-active rounded-xl font-bold self-start">← 返回</button>
                     <div class="flex flex-wrap justify-center gap-8 w-full px-4">
                         ${activeCats.map((cat, idx) => `
-                            <div class="cat-box w-96 ${themeClasses[idx] || 'theme-orange'}">
-                                <div class="cat-header">
-                                    <img src="images/categories/${cat}.png" class="w-16 h-16 object-contain"> 
-                                    <span class="text-3xl font-black tracking-wider">${cat}</span>
-                                </div>
-                                <div class="p-6 flex flex-wrap gap-4 justify-center">
-                                    ${selectedItems.filter(i => i.cat === cat).map(i => `<div class="vocab-card shadow-sm border border-gray-100"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>`).join('')}
+                            <div class="cat-box w-80 ${themeClasses[idx] || 'theme-orange'}">
+                                <div class="cat-header"><span class="text-2xl font-black">${cat}</span></div>
+                                <div class="p-4 flex flex-wrap gap-2 justify-center">
+                                    ${selectedItems.filter(i => i.cat === cat).map(i => `<div class="vocab-card w-20"><img src="${i.path}" class="w-full"></div>`).join('')}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
-                    <button onclick="setView('GAME')" class="px-24 py-6 btn-orange btn-active rounded-full font-black text-4xl mt-10 mb-20 shadow-lg">開始遊戲 🚀</button>
+                    <button onclick="setView('GAME')" class="px-24 py-6 btn-orange btn-active rounded-full font-black text-4xl mt-10 mb-20">開始 🚀</button>
                 </div>
             `;
         }
 
+        // --- Bug Fix 2: Better Drag & Auto-Scale ---
         function renderGameStage(app) {
             const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
             const zones = gameMode === 'free' ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
 
+            // Auto-calculate card width based on total count to ensure they fit
+            const count = selectedItems.length;
+            let dynamicWidth = 110;
+            if (count > 12) dynamicWidth = 90;
+            if (count > 20) dynamicWidth = 75;
+            if (count > 30) dynamicWidth = 60;
+            document.documentElement.style.setProperty('--card-width', dynamicWidth + 'px');
+
             app.innerHTML = `
                 <div class="game-viewport">
-                    <div id="shuffled-box" class="h-[30%] border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/70 overflow-y-auto shadow-inner">
+                    <div id="shuffled-box" class="h-[25%] border-4 border-dashed border-white rounded-3xl p-4 flex flex-wrap gap-3 justify-center bg-white/60 overflow-y-auto">
                         ${shuffled.map((v) => `
                             <div id="${v.id}" data-cat="${v.cat}" 
-                                 class="vocab-card shadow-xl relative z-10 draggable-item" 
-                                 ontouchstart="handleTouchStart(event, '${v.cat}')">
-                                <img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p>
+                                 class="vocab-card shadow-lg draggable-item" 
+                                 onpointerdown="startDrag(event)">
+                                <img src="${v.path}" class="w-full pointer-events-none">
+                                <p>${v.name}</p>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div id="zones-container" class="flex-1 flex gap-6 w-full overflow-x-auto pb-4 px-2 items-stretch">
+                    <div class="flex-1 flex gap-4 w-full overflow-x-auto pb-2 items-stretch">
                         ${zones.map((cat, idx) => `
-                            <div class="cat-box flex-1 min-w-[280px] drop-zone ${themeClasses[idx] || 'theme-orange'}" data-zone-cat="${cat}">
-                                ${gameMode === 'ordered' ? `
+                            <div class="cat-box flex-1 min-w-[250px] drop-zone ${themeClasses[idx] || 'theme-orange'}" data-zone-cat="${cat}">
                                 <div class="cat-header pointer-events-none">
-                                    <img src="images/categories/${cat}.png" class="w-14 h-14 object-contain">
-                                    <span class="text-3xl font-black">${cat}</span>
-                                </div>` : `<div class="h-8 w-full pointer-events-none"></div>`}
-                                <div class="flex-1 p-5 flex flex-wrap gap-4 content-start justify-center slot-container pointer-events-none"></div>
+                                    <span class="text-2xl font-black">${cat}</span>
+                                </div>
+                                <div class="flex-1 p-3 flex flex-wrap gap-2 content-start justify-center slot-container pointer-events-none"></div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div class="h-14 flex justify-center gap-6 shrink-0 mb-4">
-                        <button onclick="setView('SELECT')" class="px-10 py-2 btn-gray btn-active rounded-full font-bold">退出遊戲</button>
-                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-12 py-2 btn-emerald btn-active rounded-full font-black text-xl">完成分類 ✨</button>` : ''}
+                    <div class="h-14 flex justify-center gap-6 shrink-0 mb-2">
+                        <button onclick="setView('SELECT')" class="px-10 py-2 btn-gray btn-active rounded-full font-bold">返回</button>
+                        ${gameMode === 'free' ? `<button onclick="finishGame()" class="px-12 py-2 btn-emerald btn-active rounded-full font-black">完成 ✨</button>` : ''}
                     </div>
                 </div>
             `;
-            
-            // Add global touch move/end listeners for the game stage
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            document.addEventListener('touchend', handleTouchEnd);
         }
 
-        // --- Touch Drag Logic ---
-        let dragTarget = null;
-        let startX, startY;
-        let initialOffsetLeft, initialOffsetTop;
-        let dragCat = '';
+        // --- Pointer-Based Drag Logic (Works for iPad & Mouse) ---
+        let dragItem = null;
+        let offset = { x: 0, y: 0 };
 
-        function handleTouchStart(e, cat) {
-            dragTarget = e.currentTarget;
-            dragCat = cat;
-            const touch = e.touches[0];
+        function startDrag(e) {
+            dragItem = e.currentTarget;
+            const rect = dragItem.getBoundingClientRect();
             
-            // Record starting positions
-            const rect = dragTarget.getBoundingClientRect();
-            startX = touch.clientX;
-            startY = touch.clientY;
-            initialOffsetLeft = rect.left;
-            initialOffsetTop = rect.top;
+            // Get touch/mouse offset
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
 
-            // Clone and prepare the element for free movement
-            dragTarget.classList.add('dragging');
-            dragTarget.style.left = initialOffsetLeft + 'px';
-            dragTarget.style.top = initialOffsetTop + 'px';
-            dragTarget.style.width = rect.width + 'px';
+            dragItem.classList.add('dragging');
+            dragItem.style.width = rect.width + 'px';
+            dragItem.style.left = rect.left + 'px';
+            dragItem.style.top = rect.top + 'px';
+
+            document.addEventListener('pointermove', moveDrag);
+            document.addEventListener('pointerup', endDrag);
         }
 
-        function handleTouchMove(e) {
-            if (!dragTarget) return;
-            e.preventDefault(); // CRITICAL: Stops the browser from pull-to-refresh
-            
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-
-            dragTarget.style.left = (initialOffsetLeft + dx) + 'px';
-            dragTarget.style.top = (initialOffsetTop + dy) + 'px';
+        function moveDrag(e) {
+            if (!dragItem) return;
+            dragItem.style.left = (e.clientX - offset.x) + 'px';
+            dragItem.style.top = (e.clientY - offset.y) + 'px';
         }
 
-        function handleTouchEnd(e) {
-            if (!dragTarget) return;
+        function endDrag(e) {
+            if (!dragItem) return;
 
-            const touch = e.changedTouches[0];
-            const dropZone = findDropZone(touch.clientX, touch.clientY);
+            // Find drop zone under point
+            dragItem.hidden = true; // Hide temporarily to find what's underneath
+            const dropEl = document.elementFromPoint(e.clientX, e.clientY);
+            dragItem.hidden = false;
 
-            if (dropZone) {
-                const zoneCat = dropZone.getAttribute('data-zone-cat');
-                const container = dropZone.querySelector('.slot-container');
-                
-                // Logic check
-                const isCorrect = (gameMode === 'free' || dragCat === zoneCat);
-                
-                // Add to new container
-                container.appendChild(dragTarget);
-                
-                // Visual cleanup
-                dragTarget.classList.remove('dragging');
-                dragTarget.style.position = 'relative';
-                dragTarget.style.left = 'auto';
-                dragTarget.style.top = 'auto';
-                dragTarget.style.width = 'var(--card-width)';
+            const zone = dropEl ? dropEl.closest('.drop-zone') : null;
 
-                // Feedback
+            if (zone) {
+                const zoneCat = zone.getAttribute('data-zone-cat');
+                const itemCat = dragItem.getAttribute('data-cat');
+                const container = zone.querySelector('.slot-container');
+                const isCorrect = (gameMode === 'free' || itemCat === zoneCat);
+
+                // Feedback Star/Cross
                 const feedback = document.createElement('div');
                 feedback.className = 'feedback-pop';
                 feedback.innerHTML = isCorrect ? '⭐' : '❌';
-                dragTarget.appendChild(feedback);
+                dragItem.appendChild(feedback);
                 
                 sounds[isCorrect ? 'star' : 'wrong'].currentTime = 0;
                 sounds[isCorrect ? 'star' : 'wrong'].play();
+
+                container.appendChild(dragItem);
                 
+                // Final Check only on correct drop
                 if (gameMode === 'ordered') checkWin();
+
             } else {
-                // Return to original spot
-                dragTarget.classList.remove('dragging');
-                dragTarget.style.position = 'relative';
-                dragTarget.style.left = 'auto';
-                dragTarget.style.top = 'auto';
+                // Return to source if dropped outside
+                document.getElementById('shuffled-box').appendChild(dragItem);
             }
 
-            dragTarget = null;
+            // Reset Styles
+            dragItem.classList.remove('dragging');
+            dragItem.style.position = 'relative';
+            dragItem.style.left = 'auto';
+            dragItem.style.top = 'auto';
+            
+            dragItem = null;
+            document.removeEventListener('pointermove', moveDrag);
+            document.removeEventListener('pointerup', endDrag);
         }
-
-        function findDropZone(x, y) {
-            const zones = document.querySelectorAll('.drop-zone');
-            for (let zone of zones) {
-                const rect = zone.getBoundingClientRect();
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                    return zone;
-                }
-            }
-            return null;
-        }
-
-        // --- Original Logic ---
-        function handleSizeChange(val) {
-            document.documentElement.style.setProperty('--card-width', val + 'px');
-            document.documentElement.style.setProperty('--card-font-size', (val/100) + 'rem');
-        }
-
-        function handleTextToggle(isVisible) { updateView(); }
 
         function checkWin() {
-            if (document.getElementById('shuffled-box').children.length > 0) return;
+            const remaining = document.getElementById('shuffled-box').children.length;
+            if (remaining > 0) return;
+
             const cards = document.querySelectorAll('.slot-container .vocab-card');
             let allCorrect = true;
             cards.forEach(card => { 
                 if (card.getAttribute('data-cat') !== card.closest('.cat-box').getAttribute('data-zone-cat')) allCorrect = false; 
             });
-            if (allCorrect) finishGame(false);
+
+            if (allCorrect) finishGame();
         }
 
-        function finishGame(isFree) {
-            confetti({ particleCount: 250, spread: 90, origin: { y: 0.7 } });
+        function finishGame() {
+            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
             sounds.hooray.play();
         }
 
-        function toggleItem(id) {
-            const idx = selectedItems.findIndex(i => i.id === id);
-            if (idx > -1) selectedItems.splice(idx, 1);
-            else selectedItems.push(vocabList.find(v => v.id === id));
-            updateView();
+        // --- Standard Helpers ---
+        function handleSizeChange(val) {
+            document.documentElement.style.setProperty('--card-width', val + 'px');
         }
 
         function selectAllInCat(cat) {
             vocabList.filter(v => v.cat === cat).forEach(i => { if(!selectedItems.some(s=>s.id===i.id)) selectedItems.push(i); });
-            updateView();
+            filterGrid(document.getElementById('searchInput').value);
+            document.getElementById('nextBtn').innerText = `下一步 (已選 ${selectedItems.length} 張)`;
         }
 
         function goNextFromSelect() {
@@ -679,7 +658,7 @@
             const app = document.getElementById('app');
             const canvas = await html2canvas(app, { scale: 2, useCORS: true });
             const link = document.createElement('a');
-            link.download = '分類練習結果.png';
+            link.download = '分類結果.png';
             link.href = canvas.toDataURL();
             link.click();
         }

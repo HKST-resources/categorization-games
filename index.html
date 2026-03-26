@@ -3,332 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>詞彙學習專業助手</title>
+    <title>詞彙學習遊戲</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
+            --card-width: 110px; 
+            --card-font-size: 1.1rem;
+            /* Slightly darker, more professional shades */
+            --blue-dark: #0EA5E9; 
+            --orange-dark: #EA580C;
+            --pink-main: #FB6764;
             --blue-main: #4BD8F8;
-            --blue-shadow: #3bb8d6;
-            --orange-main: #f97316;
-            --orange-shadow: #c2410c;
-            --card-width: 110px;
         }
         body { font-family: "PingFang HK", "Heiti TC", sans-serif; overflow-x: hidden; user-select: none; }
-        .bg-park { background: url('images/park.jpg') center/cover fixed; }
         
-        /* 3D Button Shadows */
-        .btn-blue { background-color: var(--blue-main); border-bottom: 5px solid var(--blue-shadow); color: white; }
-        .btn-orange { background-color: var(--orange-main); border-bottom: 5px solid var(--orange-shadow); color: white; }
-        .btn-emerald { background-color: #10b981; border-bottom: 5px solid #059669; color: white; }
-        .btn-gray { background-color: #9ca3af; border-bottom: 5px solid #6b7280; color: white; }
+        .bg-park { background: url('images/park.jpg') center/cover fixed; }
+        .bg-room { background: url('images/room.jpg') center/cover fixed; }
+        .bg-road { background: url('images/road.jpg') center/cover fixed; }
+        .bg-game { background: url('images/game.jpg') center/cover fixed; }
+        .bg-white { background-color: #ffffff; }
+
+        /* Updated Button Aesthetics - Darker Shades */
+        .btn-blue { background-color: var(--blue-dark); border-bottom: 5px solid #0369a1; color: white; }
+        .btn-orange { background-color: var(--orange-dark); border-bottom: 5px solid #9a3412; color: white; }
+        .btn-emerald { background-color: #059669; border-bottom: 5px solid #064e3b; color: white; }
+        .btn-gray { background-color: #6b7280; border-bottom: 5px solid #374151; color: white; }
         .btn-active:active { transform: translateY(2px); border-bottom-width: 2px; }
 
-        /* Categorization Box Themes */
+        /* Card Logic */
+        .vocab-card {
+            width: var(--card-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .vocab-card p { font-size: var(--card-font-size); font-weight: 400; text-align: center; margin-top: 4px; }
+        .selected-card { outline: 6px solid #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
+
+        .hide-text p { display: none !important; }
+        .hide-text .vocab-card { height: var(--card-width); justify-content: center; }
+
+        /* Category Box Design */
+        .cat-box { display: flex; flex-direction: column; border-radius: 24px; overflow: hidden; background: white; border-width: 6px; height: 100%; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .cat-header { padding: 15px 20px; color: white; font-weight: 900; display: flex; align-items: center; gap: 15px; }
+        
         .theme-pink { border-color: #FB6764; } .theme-pink .cat-header { background-color: #FB6764; }
         .theme-blue { border-color: #4BD8F8; } .theme-blue .cat-header { background-color: #4BD8F8; }
         .theme-green { border-color: #4ad395; } .theme-green .cat-header { background-color: #4ad395; }
         .theme-orange { border-color: #fb923c; } .theme-orange .cat-header { background-color: #fb923c; }
-        
-        .cat-box { display: flex; flex-direction: column; border-radius: 24px; overflow: hidden; background: white; border-width: 6px; }
-        .cat-header { padding: 15px; color: white; font-weight: 900; display: flex; align-items: center; gap: 12px; }
 
-        /* Card Styles */
-        .vocab-card { width: var(--card-width); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .selected-card { outline: 6px solid #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
-        .hide-text p { display: none !important; }
-        .hide-text .vocab-card { height: var(--card-width); justify-content: center; }
-
-        /* Divergent Timer */
-        .timer-track { 
-            height: 45px; width: 100%; border-radius: 999px; position: relative; 
-            border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            background: #e5e7eb; overflow: visible;
+        .feedback-pop {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            font-size: 4rem; z-index: 50; pointer-events: none;
+            animation: popUp 0.8s ease-out forwards;
         }
-        .timer-fill { height: 100%; border-radius: 999px; transition: width 0.1s linear; }
-        .emoji-mover { position: absolute; top: -18px; font-size: 55px; z-index: 20; transition: all 0.1s linear; }
-        .endpoint-emoji { position: absolute; top: -10px; font-size: 40px; z-index: 10; }
-
-        /* Big Round Star Button */
-        .game-round-btn {
-            width: 180px; height: 180px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fde047, #ca8a04);
-            border: 8px solid #a16207; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 80px; box-shadow: 0 15px 0 #854d0e, 0 20px 30px rgba(0,0,0,0.3);
-            transition: all 0.1s;
+        @keyframes popUp {
+            0% { transform: translate(-50%, 10px) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -30px) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50px) scale(1); opacity: 0; }
         }
-        .game-round-btn:active { transform: translateY(10px); box-shadow: 0 5px 0 #854d0e, 0 10px 15px rgba(0,0,0,0.2); }
 
-        /* Summary Logic */
-        .grayscale-card { filter: grayscale(100%); opacity: 0.6; transition: 0.3s; cursor: pointer; border: 4px solid transparent; }
-        .grayscale-card.active-score { filter: grayscale(0%); opacity: 1; border-color: #22c55e; background: #f0fdf4; transform: scale(1.05); }
-
-        .feedback-pop { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 4rem; z-index: 50; animation: popUp 0.8s forwards; }
-        @keyframes popUp { 0% { opacity: 0; transform: translate(-50%, 0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50px); } }
+        .game-viewport { height: calc(100vh - 110px); display: flex; flex-direction: column; gap: 1rem; }
     </style>
 </head>
 <body class="bg-park">
 
-    <nav class="fixed top-0 left-0 w-full h-14 bg-white shadow-md z-[100] flex items-center justify-between px-4">
+    <nav class="fixed top-0 left-0 w-full h-14 bg-white shadow-sm z-[100] flex items-center justify-between px-4">
         <div class="flex gap-2">
-            <button onclick="setMode('SORT')" class="px-5 py-1 rounded-xl font-bold btn-blue btn-active">分類遊戲</button>
-            <button onclick="setMode('DIV')" class="px-5 py-1 rounded-xl font-bold btn-orange btn-active">擴展性命名</button>
-            <button class="px-5 py-1 rounded-xl font-bold opacity-40 btn-gray cursor-not-allowed">快速命名</button>
+            <button onclick="showSubModes()" class="px-5 py-1 rounded-xl font-bold btn-blue btn-active">分類遊戲</button>
+            <button class="px-5 py-1 rounded-xl font-bold opacity-50 btn-orange">擴展性命名</button>
+            <button class="px-5 py-1 rounded-xl font-bold opacity-50 btn-gray">快速命名</button>
         </div>
+
         <div class="flex items-center gap-4 text-sm font-bold text-gray-700">
-            <input type="range" min="80" max="220" value="110" oninput="document.documentElement.style.setProperty('--card-width', this.value+'px')">
-            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="textToggle" checked onchange="updateView()"> 顯示文字</label>
-            <button onclick="exportResult()" class="px-4 py-1 bg-emerald-600 text-white rounded-md font-bold btn-active">匯出 💾</button>
+            <div class="flex items-center gap-2">
+                <span>大小</span>
+                <input type="range" id="sizeSlider" min="80" max="220" value="110" oninput="handleSizeChange(this.value)">
+            </div>
+            <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" id="showTextToggle" checked onchange="handleTextToggle(this.checked)"> 顯示文字
+            </label>
+            <select onchange="document.body.className = 'bg-' + this.value" class="border rounded-md px-2 py-1 bg-gray-50">
+                <option value="park">草地</option>
+                <option value="room">房間</option>
+                <option value="road">馬路</option>
+                <option value="game">遊戲</option>
+                <option value="white">純白</option>
+            </select>
+            <button onclick="exportResult()" class="px-4 py-1 bg-emerald-600 text-white rounded-md font-bold btn-active shadow-md">匯出 💾</button>
         </div>
     </nav>
 
-    <main id="app" class="mt-16 p-4"></main>
+    <main id="app" class="mt-16 p-4">
+        </main>
 
     <script>
-        const bulkData = `水果 哈密瓜 水果/哈密瓜.png\n水果 士多啤梨 水果/士多啤梨.png\n水果 奇異果 水果/奇異果.png\n蔬菜 粟米 蔬菜/粟米.png\n蔬菜 紅椒 蔬菜/紅椒.png\n蔬菜 白菜 蔬菜/白菜.png\n動物 狗 動物/狗.png\n動物 貓 動物/貓.png`;
-        const vocabList = bulkData.trim().split('\n').map(l => {
-            const [cat, name, path] = l.trim().split(/\s+/);
-            return { cat, name, path: `images/${path}`, id: 'v-'+Math.random().toString(36).substr(2,9) };
+        const bulkVocabData = `
+水果 哈密瓜 水果/哈密瓜.png
+水果 士多啤梨 水果/士多啤梨.png
+水果 奇異果 水果/奇異果.png
+蔬菜 粟米 蔬菜/粟米.png
+蔬菜 紅椒 蔬菜/紅椒.png
+蔬菜 白菜 蔬菜/白菜.png
+動物 狗 動物/狗.png
+動物 貓 動物/貓.png
+`; 
+
+        const vocabList = bulkVocabData.trim().split('\n').map(line => {
+            const [cat, name, path] = line.trim().split(/\s+/);
+            return { cat, name, path: `images/${path}`, id: 'v-' + Math.random().toString(36).substr(2, 9) };
         });
-        const categories = [...new Set(vocabList.map(v => v.cat))];
-        const themes = ['theme-pink', 'theme-blue', 'theme-green', 'theme-orange'];
 
-        let currentMode = 'SORT'; // SORT or DIV
-        let currentView = 'WELCOME';
-        let sortSubMode = 'ordered'; 
+        const categories = [...new Set(vocabList.map(item => item.cat))];
+        const themeClasses = ['theme-pink', 'theme-blue', 'theme-green', 'theme-orange'];
+
+        let view = 'WELCOME';
+        let gameMode = ''; 
         let selectedItems = [];
-        let customCategory = "";
-        let timerType = 'bomb'; // bomb or car
-        let duration = 15;
-        let starCount = 0;
-        let isPaused = false;
-        let timerInterval = null;
-        let timeLeft = 0;
-        let scoredIds = [];
+        const sounds = { star: new Audio('sounds/star.mp3'), wrong: new Audio('sounds/wrong.mp3'), hooray: new Audio('sounds/hooray.mp3') };
 
-        const sounds = { star: new Audio('sounds/star.mp3'), bomb: new Audio('sounds/bomb.mp3'), hooray: new Audio('sounds/hooray.mp3'), wrong: new Audio('sounds/wrong.mp3') };
-
-        function setMode(m) {
-            currentMode = m; selectedItems = []; customCategory = ""; 
-            currentView = (m === 'SORT') ? 'SORT_SUB' : 'SELECT';
-            updateView();
+        function setView(v, mode) { 
+            view = v; 
+            if(mode) gameMode = mode; 
+            updateView(); 
         }
+
+        function showSubModes() { view = 'SUB_MODES'; updateView(); }
 
         function updateView() {
             const app = document.getElementById('app');
-            const hideText = !document.getElementById('textToggle').checked;
-            app.className = "mt-16 p-4 " + (hideText ? "hide-text" : "");
-
-            if (currentView === 'WELCOME') app.innerHTML = `<div class="h-[70vh] flex items-center justify-center text-3xl text-gray-400 font-bold">請選擇遊戲模式</div>`;
-            else if (currentView === 'SORT_SUB') app.innerHTML = `<div class="flex h-[60vh] items-center justify-center gap-10"><button onclick="sortSubMode='ordered';currentView='SELECT';updateView()" class="w-72 h-40 btn-blue btn-active rounded-3xl text-4xl font-black">按類別分類</button><button onclick="sortSubMode='free';currentView='SELECT';updateView()" class="w-72 h-40 btn-orange btn-active rounded-3xl text-4xl font-black">自由分類</button></div>`;
-            else if (currentView === 'SELECT') renderSelection(app);
-            else if (currentView === 'PREP') renderPrep(app);
-            else if (currentView === 'GAME_SORT') renderGameSort(app);
-            else if (currentView === 'DIV_SETUP') renderDivSetup(app);
-            else if (currentView === 'GAME_DIV') renderGameDiv(app);
-            else if (currentView === 'SUMMARY') renderSummary(app);
+            const isTextHidden = !document.getElementById('showTextToggle').checked;
+            app.className = "mt-16 p-4 " + (isTextHidden ? "hide-text" : "");
+            
+            if (view === 'WELCOME') {
+                app.innerHTML = `<div class="flex h-[70vh] items-center justify-center text-3xl text-gray-400 font-bold">請選擇上方活動開始</div>`;
+            } 
+            else if (view === 'SUB_MODES') {
+                app.innerHTML = `
+                <div class="flex flex-col items-center justify-center gap-12 py-20">
+                    <div class="flex gap-10">
+                        <button onclick="setView('SELECT', 'ordered')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-blue btn-active">按類別分類</button>
+                        <button onclick="setView('SELECT', 'free')" class="w-72 h-40 text-white text-4xl font-black rounded-3xl btn-orange btn-active">自由分類</button>
+                    </div>
+                </div>`;
+            }
+            else if (view === 'SELECT') { renderSelection(app); }
+            else if (view === 'PREP') { renderPrepBoard(app); }
+            else if (view === 'GAME') { renderGameStage(app); }
         }
 
         function renderSelection(app) {
             app.innerHTML = `
-                <div class="sticky top-14 z-50 bg-white/90 p-4 rounded-2xl mb-6 shadow-sm flex flex-wrap justify-between items-center gap-4">
-                    <div class="flex gap-3">
-                        <select onchange="document.getElementById('sec-'+this.value).scrollIntoView({behavior:'smooth'})" class="p-2 border-2 rounded-xl font-bold">
-                            <option>跳至...</option>${categories.map(c=>`<option value="${c}">${c}</option>`).join('')}
+                <div class="sticky top-14 z-40 bg-white/90 p-4 rounded-2xl mb-6 shadow-sm flex justify-between items-center border border-gray-200">
+                    <div class="flex gap-4">
+                        <select onchange="document.getElementById('section-'+this.value).scrollIntoView({behavior: 'smooth'})" class="p-2 border-2 border-gray-200 rounded-xl font-bold bg-white">
+                            <option>跳至類別...</option>
+                            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
                         </select>
-                        <input type="text" id="sInput" placeholder="🔍 搜尋..." class="p-2 border-2 rounded-xl" oninput="filterGrid(this.value)">
+                        <input type="text" id="searchInput" placeholder="🔍 搜尋詞彙..." class="p-2 border-2 border-gray-200 rounded-xl w-64" oninput="filterGrid(this.value)">
                     </div>
-                    ${currentMode === 'DIV' ? `<input type="text" placeholder="自訂題目 (如: 紅色的水果)" class="p-2 border-2 rounded-xl w-64" value="${customCategory}" onchange="customCategory=this.value">` : ''}
-                    <button onclick="goPrep()" class="px-10 py-3 btn-orange btn-active rounded-full font-black text-xl">下一步 (${selectedItems.length})</button>
+                    <button onclick="goNextFromSelect()" class="px-8 py-3 btn-orange btn-active rounded-full font-black text-xl">下一步：已選取 ${selectedItems.length} 張</button>
                 </div>
-                <div id="grid"></div>
+                <div id="selection-grid-container"></div>
+                <button onclick="setView('SUB_MODES')" class="mt-8 px-10 py-2 btn-gray btn-active rounded-full font-bold">返回</button>
             `;
             filterGrid('');
         }
 
-        function filterGrid(q) {
+        function filterGrid(term) {
+            const container = document.getElementById('selection-grid-container');
+            if (!container) return;
             let html = '';
-            categories.forEach(cat => {
-                const filtered = vocabList.filter(v => v.cat === cat && v.name.includes(q));
-                if(filtered.length > 0) {
-                    html += `<div id="sec-${cat}" class="mb-8"><div class="bg-orange-600 text-white px-6 py-2 rounded-t-xl flex justify-between">
-                        <span class="font-bold">${cat}</span><button onclick="selAll('${cat}')" class="text-sm bg-white/20 px-3 rounded-full">全選</button>
-                    </div><div class="bg-white/40 p-4 rounded-b-xl flex flex-wrap gap-4 border-x border-b border-orange-200">
-                        ${filtered.map(v => `<div onclick="toggle('${v.id}')" class="vocab-card cursor-pointer ${selectedItems.some(s=>s.id===v.id)?'selected-card':''}"><img src="${v.path}" class="w-full"><p>${v.name}</p></div>`).join('')}
-                    </div></div>`;
-                }
-            });
-            document.getElementById('grid').innerHTML = html;
+
+            if (term.trim()) {
+                const filtered = vocabList.filter(v => v.name.includes(term));
+                html = `<div class="flex flex-wrap gap-4 p-4 bg-white/30 rounded-2xl">${filtered.map(v => renderCardHTML(v)).join('')}</div>`;
+            } else {
+                categories.forEach(cat => {
+                    html += `
+                    <div id="section-${cat}" class="mb-8">
+                        <div class="bg-orange-600 text-white px-6 py-2 rounded-t-xl flex justify-between items-center shadow-md">
+                            <span class="text-xl font-black">${cat}</span>
+                            <button onclick="selectAllInCat('${cat}')" class="text-sm bg-white/20 px-4 py-1 rounded-full font-bold hover:bg-white/40">全選</button>
+                        </div>
+                        <div class="bg-white/40 p-5 rounded-b-xl flex flex-wrap gap-4 border-x border-b border-orange-200">
+                            ${vocabList.filter(v => v.cat === cat).map(v => renderCardHTML(v)).join('')}
+                        </div>
+                    </div>`;
+                });
+            }
+            container.innerHTML = html;
         }
 
-        function renderPrep(app) {
+        function renderCardHTML(v) {
+            const active = selectedItems.some(i => i.id === v.id) ? 'selected-card' : '';
+            return `<div onclick="toggleItem('${v.id}')" class="vocab-card cursor-pointer ${active}"><img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p></div>`;
+        }
+
+        function renderPrepBoard(app) {
             const activeCats = [...new Set(selectedItems.map(i => i.cat))];
             app.innerHTML = `
                 <div class="flex flex-col items-center gap-6">
-                    <button onclick="currentView='SELECT';updateView()" class="self-start px-6 py-2 btn-gray btn-active rounded-xl font-bold">← 返回修改</button>
-                    <div class="flex flex-wrap justify-center gap-8 w-full">
-                        ${currentMode === 'SORT' ? activeCats.map((cat, idx) => `
-                            <div class="cat-box w-80 ${themes[idx] || 'theme-orange'}">
-                                <div class="cat-header"><img src="images/categories/${cat}.png" class="w-12 h-12 object-contain"><span class="text-2xl font-black">${cat}</span></div>
-                                <div class="p-4 flex flex-wrap gap-3 justify-center">${selectedItems.filter(s=>s.cat===cat).map(s=>`<div class="vocab-card shadow-sm"><img src="${s.path}" class="w-full"><p>${s.name}</p></div>`).join('')}</div>
-                            </div>
-                        `).join('') : `
-                            <div class="cat-box w-full max-w-4xl theme-blue">
-                                <div class="cat-header text-3xl font-black py-4">任務題目：${customCategory || selectedItems[0]?.cat}</div>
-                                <div class="p-8 flex flex-wrap gap-4 justify-center">${selectedItems.map(s=>`<div class="vocab-card shadow-md border"><img src="${s.path}" class="w-full"><p>${s.name}</p></div>`).join('')}</div>
-                            </div>
-                        `}
-                    </div>
-                    <button onclick="startApp()" class="px-20 py-5 btn-orange btn-active rounded-full font-black text-4xl mt-6 shadow-xl">開始遊戲 🚀</button>
-                </div>
-            `;
-        }
-
-        function renderDivSetup(app) {
-            app.innerHTML = `
-                <div class="flex flex-col items-center py-10 gap-10">
-                    <h2 class="text-4xl font-black text-blue-900">計時器與模式</h2>
-                    <div class="flex gap-8">
-                        <button onclick="timerType='bomb';updateView()" class="w-48 h-48 rounded-3xl border-8 ${timerType==='bomb'?'border-orange-500 bg-orange-50':'border-white bg-white/50'} flex flex-col items-center justify-center text-7xl">💣<span class="text-xl font-bold">炸彈</span></button>
-                        <button onclick="timerType='car';updateView()" class="w-48 h-48 rounded-3xl border-8 ${timerType==='car'?'border-blue-500 bg-blue-50':'border-white bg-white/50'} flex flex-col items-center justify-center text-7xl">🏎️<span class="text-xl font-bold">賽車</span></button>
-                    </div>
-                    <div class="flex gap-4">
-                        ${[10, 15, 20, 30].map(s => `<button onclick="duration=${s};updateView()" class="w-24 py-3 rounded-xl font-bold ${duration===s?'btn-orange':'bg-white border-2'}">${s}秒</button>`).join('')}
-                    </div>
-                    <button onclick="currentView='GAME_DIV';updateView();startTimer();" class="px-32 py-6 btn-emerald btn-active rounded-full font-black text-4xl shadow-2xl">GO! 🏁</button>
-                </div>
-            `;
-        }
-
-        function renderGameDiv(app) {
-            starCount = 0; scoredIds = []; isPaused = false;
-            app.innerHTML = `
-                <div class="h-[80vh] flex flex-col items-center justify-between">
-                    <div class="w-full max-w-5xl px-10 mt-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-3xl font-black text-blue-900" id="timeLabel">${duration}秒</span>
-                            <button id="pauseBtn" onclick="togglePause()" class="px-8 py-2 btn-blue btn-active rounded-full font-bold">暫停 ⏸</button>
-                        </div>
-                        <div class="timer-track">
-                            <div id="endpoint" class="endpoint-emoji ${timerType==='bomb'?'left-2':'right-2'}">${timerType==='bomb'?'🔥':'🏁'}</div>
-                            <div id="tFill" class="timer-fill ${timerType==='bomb'?'bg-gradient-to-r from-red-600 to-orange-400':'bg-gradient-to-r from-blue-400 to-blue-700'}" style="width:100%"></div>
-                            <div id="tEmoji" class="emoji-mover" style="${timerType==='bomb'?'right:0%':'left:0%'}">${timerType==='bomb'?'💣':'🏎️'}</div>
-                        </div>
-                    </div>
-                    <h1 class="text-6xl font-black text-blue-900 drop-shadow-sm">${customCategory || selectedItems[0]?.cat}</h1>
-                    <div class="flex flex-col items-center gap-6">
-                        <div onclick="countDiv()" class="game-round-btn">⭐</div>
-                        <div id="divCount" class="text-8xl font-black text-orange-500">0</div>
-                    </div>
-                    <div class="h-10"></div>
-                </div>
-            `;
-        }
-
-        function renderGameSort(app) {
-            const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
-            const zones = sortSubMode === 'free' ? ['區域 A', '區域 B'] : [...new Set(selectedItems.map(i => i.cat))];
-            app.innerHTML = `
-                <div class="flex flex-col h-[82vh] gap-4">
-                    <div id="drop-shuffled" class="h-1/3 border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/60 overflow-y-auto">
-                        ${shuffled.map(v => `<div id="${v.id}" data-cat="${v.cat}" class="vocab-card shadow-xl cursor-grab relative" draggable="true" ondragstart="e=>{e.dataTransfer.setData('t',e.target.id)}"><img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p></div>`).join('')}
-                    </div>
-                    <div class="flex-1 flex gap-6 overflow-x-auto pb-4">
-                        ${zones.map((z, idx) => `
-                            <div class="cat-box flex-1 min-w-[280px] ${themes[idx] || 'theme-orange'}" ondragover="e=>e.preventDefault()" ondrop="handleSortDrop(event,'${z}')">
-                                ${sortSubMode==='ordered'?`<div class="cat-header"><img src="images/categories/${z}.png" class="w-14 h-14 object-contain"><span class="text-3xl font-black">${z}</span></div>`:`<div class="h-10 bg-gray-100"></div>`}
-                                <div class="flex-1 p-5 flex flex-wrap gap-4 justify-center content-start"></div>
+                    <button onclick="setView('SELECT')" class="px-8 py-2 btn-gray btn-active rounded-xl font-bold self-start">← 返回修改</button>
+                    <div class="flex flex-wrap justify-center gap-8 w-full px-4">
+                        ${activeCats.map((cat, idx) => `
+                            <div class="cat-box w-96 ${themeClasses[idx] || 'theme-orange'}">
+                                <div class="cat-header">
+                                    <img src="images/categories/${cat}.png" class="w-16 h-16 object-contain"> 
+                                    <span class="text-3xl font-black tracking-wider">${cat}</span>
+                                </div>
+                                <div class="p-6 flex flex-wrap gap-4 justify-center">
+                                    ${selectedItems.filter(i => i.cat === cat).map(i => `<div class="vocab-card shadow-sm border border-gray-100"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>`).join('')}
+                                </div>
                             </div>
                         `).join('')}
                     </div>
+                    <button onclick="setView('GAME')" class="px-24 py-6 btn-orange btn-active rounded-full font-black text-4xl mt-10 shadow-lg">開始遊戲 🚀</button>
                 </div>
             `;
         }
 
-        function renderSummary(app) {
+        function renderGameStage(app) {
+            const shuffled = [...selectedItems].sort(() => Math.random() - 0.5);
+            const zones = gameMode === 'free' ? ['分類 A', '分類 B'] : [...new Set(selectedItems.map(i => i.cat))];
+
             app.innerHTML = `
-                <div id="report" class="bg-white p-10 rounded-3xl shadow-2xl max-w-6xl mx-auto border-8 border-blue-50">
-                    <div class="flex justify-between items-end border-b-8 border-blue-50 pb-6 mb-8">
-                        <div><h2 class="text-5xl font-black text-blue-900">${customCategory || selectedItems[0]?.cat}</h2>
-                        <p class="text-2xl font-bold text-gray-400 mt-2">練習模式：擴展性命名 | 限時：${duration}秒</p></div>
-                        <div class="bg-emerald-50 p-6 rounded-2xl border-4 border-emerald-100 text-center">
-                            <p class="text-xl font-bold text-emerald-700 mb-1">已命名</p>
-                            <span class="text-7xl font-black text-emerald-600" id="finalScoreDisplay">0</span>
-                        </div>
+                <div class="game-viewport">
+                    <div id="shuffled-box" class="h-[30%] border-4 border-dashed border-white rounded-3xl p-6 flex flex-wrap gap-4 justify-center bg-white/70 overflow-y-auto shadow-inner">
+                        ${shuffled.map((v) => `
+                            <div id="${v.id}" data-cat="${v.cat}" class="vocab-card shadow-xl cursor-grab relative z-10" draggable="true" ondragstart="handleStart(event, '${v.cat}')">
+                                <img src="${v.path}" class="w-full pointer-events-none"><p>${v.name}</p>
+                            </div>
+                        `).join('')}
                     </div>
-                    <div class="flex flex-wrap gap-6 justify-center">
-                        ${selectedItems.map(i => `<div onclick="toggleScore('${i.id}')" id="score-${i.id}" class="vocab-card grayscale-card"><img src="${i.path}" class="w-full"><p>${i.name}</p></div>`).join('')}
+
+                    <div class="flex-1 flex gap-6 w-full overflow-x-auto pb-4 px-2 items-stretch">
+                        ${zones.map((cat, idx) => `
+                            <div class="cat-box flex-1 min-w-[280px] ${themeClasses[idx] || 'theme-orange'}" data-zone-cat="${cat}" ondragover="event.preventDefault()" ondrop="handleDrop(event, '${cat}')">
+                                ${gameMode === 'ordered' ? `
+                                <div class="cat-header">
+                                    <img src="images/categories/${cat}.png" class="w-14 h-14 object-contain">
+                                    <span class="text-3xl font-black">${cat}</span>
+                                </div>` : `<div class="h-8 w-full"></div>`}
+                                <div class="flex-1 overflow-y-auto p-5 flex flex-wrap gap-4 content-start justify-center slot-container"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="h-14 flex justify-center gap-6 shrink-0">
+                        <button onclick="setView('SELECT')" class="px-10 py-2 btn-gray btn-active rounded-full font-bold">退出遊戲</button>
+                        ${gameMode === 'free' ? `<button onclick="finishGame(true)" class="px-12 py-2 btn-emerald btn-active rounded-full font-black text-xl">完成分類 ✨</button>` : ''}
                     </div>
                 </div>
-                <div class="flex justify-center mt-12 mb-20"><button onclick="setMode('DIV')" class="px-16 py-4 btn-blue btn-active rounded-full font-black text-2xl">返回重玩</button></div>
             `;
         }
 
-        // Logic Functions
-        function toggle(id) {
-            const i = selectedItems.findIndex(s => s.id === id);
-            (i > -1) ? selectedItems.splice(i, 1) : selectedItems.push(vocabList.find(v => v.id === id));
-            filterGrid(document.getElementById('sInput').value);
+        // Logic
+        function handleSizeChange(val) {
+            document.documentElement.style.setProperty('--card-width', val + 'px');
+            document.documentElement.style.setProperty('--card-font-size', (val/100) + 'rem');
         }
-        function selAll(cat) { vocabList.filter(v => v.cat === cat).forEach(v => { if(!selectedItems.some(s=>s.id===v.id)) selectedItems.push(v); }); updateView(); }
-        function goPrep() { if(selectedItems.length > 0) { currentView = 'PREP'; updateView(); } else alert('請先選擇圖片'); }
-        function startApp() { if(currentMode === 'SORT') currentView = 'GAME_SORT'; else currentView = 'DIV_SETUP'; updateView(); }
-        
-        function handleSortDrop(e, zone) {
+
+        function handleTextToggle(isVisible) {
+            const app = document.getElementById('app');
+            isVisible ? app.classList.remove('hide-text') : app.classList.add('hide-text');
+        }
+
+        let currentDragCat = '';
+        function handleStart(e, cat) { currentDragCat = cat; e.dataTransfer.setData('text', e.target.id); }
+
+        function handleDrop(e, zoneCat) {
             e.preventDefault();
-            const id = e.dataTransfer.getData('t');
+            const id = e.dataTransfer.getData('text');
             const el = document.getElementById(id);
-            if(!el) return;
-            e.currentTarget.querySelector('div:last-child').appendChild(el);
-            const ok = (sortSubMode === 'free' || el.dataset.cat === zone);
-            const f = document.createElement('div'); f.className = 'feedback-pop'; f.innerHTML = ok ? '⭐' : '❌';
-            el.appendChild(f); sounds[ok?'star':'wrong'].play();
+            const container = e.currentTarget.querySelector('.slot-container');
+            if(!container || !el) return;
+
+            container.appendChild(el);
+            const existing = el.querySelector('.feedback-pop');
+            if(existing) existing.remove();
+
+            const isCorrect = (gameMode === 'free' || currentDragCat === zoneCat);
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-pop';
+            feedback.innerHTML = isCorrect ? '⭐' : '❌';
+            el.appendChild(feedback);
+            
+            sounds[isCorrect ? 'star' : 'wrong'].currentTime = 0;
+            sounds[isCorrect ? 'star' : 'wrong'].play();
+            if (gameMode === 'ordered') checkWin();
         }
 
-        function togglePause() { 
-            isPaused = !isPaused; 
-            document.getElementById('pauseBtn').innerText = isPaused ? '繼續 ▶️' : '暫停 ⏸';
+        function checkWin() {
+            if (document.getElementById('shuffled-box').children.length > 0) return;
+            const cards = document.querySelectorAll('.slot-container .vocab-card');
+            let allCorrect = true;
+            cards.forEach(card => { if (card.getAttribute('data-cat') !== card.closest('.cat-box').getAttribute('data-zone-cat')) allCorrect = false; });
+            if (allCorrect) finishGame(false);
         }
 
-        function startTimer() {
-            timeLeft = duration;
-            const fill = document.getElementById('tFill');
-            const em = document.getElementById('tEmoji');
-            timerInterval = setInterval(() => {
-                if(isPaused) return;
-                timeLeft -= 0.1;
-                const p = (timeLeft / duration) * 100;
-                fill.style.width = (timerType === 'bomb' ? p : (100 - p)) + '%';
-                em.style[timerType === 'bomb' ? 'right' : 'left'] = (100 - p) + '%';
-                document.getElementById('timeLabel').innerText = Math.ceil(timeLeft) + '秒';
-                if(timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    (timerType === 'bomb') ? sounds.bomb.play() : sounds.hooray.play();
-                    setTimeout(() => { currentView = 'SUMMARY'; updateView(); }, 1500);
-                }
-            }, 100);
+        function finishGame(isFree) {
+            confetti({ particleCount: 250, spread: 90, origin: { y: 0.7 } });
+            sounds.hooray.play();
         }
 
-        function countDiv() {
-            starCount++; 
-            document.getElementById('divCount').innerText = starCount;
-            sounds.star.currentTime = 0; sounds.star.play();
+        function toggleItem(id) {
+            const idx = selectedItems.findIndex(i => i.id === id);
+            if (idx > -1) selectedItems.splice(idx, 1);
+            else selectedItems.push(vocabList.find(v => v.id === id));
+            updateView();
         }
 
-        function toggleScore(id) {
-            const idx = scoredIds.indexOf(id);
-            if(idx > -1) scoredIds.splice(idx, 1); else scoredIds.push(id);
-            document.getElementById('score-'+id).classList.toggle('active-score');
-            document.getElementById('finalScoreDisplay').innerText = scoredIds.length;
+        function selectAllInCat(cat) {
+            vocabList.filter(v => v.cat === cat).forEach(i => { if(!selectedItems.some(s=>s.id===i.id)) selectedItems.push(i); });
+            updateView();
+        }
+
+        function goNextFromSelect() {
+            if (selectedItems.length === 0) return alert('請先選擇圖片');
+            setView(gameMode === 'free' ? 'GAME' : 'PREP');
         }
 
         async function exportResult() {
-            const target = document.getElementById('report') || document.getElementById('app');
-            const canvas = await html2canvas(target, { scale: 2, useCORS: true });
+            const app = document.getElementById('app');
+            const canvas = await html2canvas(app, { scale: 2, useCORS: true });
             const link = document.createElement('a');
-            link.download = '學習紀錄.png'; link.href = canvas.toDataURL(); link.click();
+            link.download = '分類練習結果.png';
+            link.href = canvas.toDataURL();
+            link.click();
         }
 
         updateView();
